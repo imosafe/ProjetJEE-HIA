@@ -1,8 +1,4 @@
-package fr.cytech.pau.hia_jee;
-
-import java.util.List;
-
-import org.hibernate.annotations.ManyToAny;
+package fr.cytech.pau.hia_jee.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
