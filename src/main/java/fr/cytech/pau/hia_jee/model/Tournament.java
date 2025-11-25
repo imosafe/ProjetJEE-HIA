@@ -1,4 +1,4 @@
-package fr.cytech.pau.hia_jee;
+package fr.cytech.pau.hia_jee.model;
 
 import java.util.List;
 

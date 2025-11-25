@@ -1,10 +1,15 @@
-package fr.cytech.pau.hia_jee;
+package fr.cytech.pau.hia_jee.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+
+import fr.cytech.pau.hia_jee.model.Match;
+import fr.cytech.pau.hia_jee.model.Tournament;
+import fr.cytech.pau.hia_jee.repository.MatchRepository;
+import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
