@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::#sponsor-form-content})}">
+<head>
+    <title>Créer un Sponsor</title>
+</head>
+<body>
+
+    <div id="sponsor-form-content">
+        <div class="container mt-5">
+            <h1 class="mb-4 text-danger">Créer un nouveau Sponsor</h1>
+            
+            <form th:action="@{/admin/sponsors}" th:object="${sponsor}" method="post">
+                <input type="hidden" th:field="*{id}" />
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nom du Sponsor:</label>
+                    <input type="text" id="name" th:field="*{name}" class="form-control bg-dark text-white border-danger" required>
+                </div>
+                
+                <button type="submit" class="btn btn-danger">Enregistrer le Sponsor</button>
+                
+                <a th:href="@{/admin/sponsors}" class="btn btn-secondary">Annuler</a>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
