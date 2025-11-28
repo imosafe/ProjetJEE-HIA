@@ -45,9 +45,11 @@ public class SponsorController {
         return "redirect:/admin/sponsors"; 
     }
 
-    @GetMapping("/delete/{id}")
-    public String deleteSponsor(@PathVariable Long id) {
-        sponsorService.deleteById(id);
-        return "redirect:/admin/sponsors";
-    }
+   @GetMapping("/delete/{id}")
+public String deleteSponsor(@PathVariable Long id) {
+    // Appel simple au service. C'est le service qui fera le travail sale.
+    sponsorService.deleteById(id); 
+    
+    return "redirect:/admin/sponsors";
+} 
 }

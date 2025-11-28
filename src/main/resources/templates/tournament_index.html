@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::#main-content})}">
+<head>
+    <title>Catalogue des Tournois</title>
+</head>
+<body>
+
+    <div id="main-content">
+        <div class="container mt-5">
+            <h1 class="text-danger mb-4">🏆 Catalogue des Tournois</h1>
+            
+            <div class="mb-4">
+                <a th:href="@{/admin/tournaments/new}" class="btn btn-warning">
+                    <i class="fas fa-plus"></i> Créer un Tournoi 
+                </a>
+            </div>
+            
+            <div class="row">
+                <div th:each="tournament : ${tournaments}" class="col-md-4 mb-4">
+                    <div class="card bg-dark text-white border-danger">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger" th:text="${tournament.name}">Nom du Tournoi</h5>
+                            <p class="card-text">Statut : <span class="badge bg-secondary">À venir</span></p>
+                            <a href="#" class="btn btn-outline-light btn-sm">Voir Détails</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div th:if="${#lists.isEmpty(tournaments)}" class="col-12">
+                    <div class="alert alert-secondary text-center">
+                        Aucun tournoi n'est disponible pour le moment.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
