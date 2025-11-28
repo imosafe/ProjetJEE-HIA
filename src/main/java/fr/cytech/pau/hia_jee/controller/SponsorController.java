@@ -17,7 +17,7 @@ import fr.cytech.pau.hia_jee.model.Sponsor;
 import fr.cytech.pau.hia_jee.service.SponsorService;
 
 @Controller 
-@RequestMapping("/hia_jee/admin/sponsors") 
+@RequestMapping("/admin/sponsors") 
 public class SponsorController {
 
     @Autowired
