@@ -43,16 +43,17 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark">
                         <li><a class="dropdown-item" th:href="@{/admin/sponsors}">Gestion des Sponsors</a></li>
-                        <li><a class="dropdown-item" th:href="@{/admin/tournaments/new}">Créer un Tournoi</a></li>
+                        <li><a class="dropdown-item" th:href="@{/admin/tournaments}">Gestion des Tournois</a></li>
                     </ul>
                 </li>
             </ul>
 
             <div class="d-flex align-items-center gap-2">
+
                 <div th:if="${session.user != null}" class="d-flex align-items-center">
                         <span class="text-white me-3">
                             <i class="bi bi-person-circle"></i>
-                            Bonjour, <b class="text-warning" th:text="${session.user.username}">User</b>
+                            Bonjour, <b class="text-warning" th:text="${session.user.username}">Pseudo</b>
                         </span>
                     <a th:href="@{/logout}" class="btn btn-sm btn-outline-light">Déconnexion</a>
                 </div>
@@ -61,16 +62,19 @@
                     <a th:href="@{/login}" class="btn btn-outline-danger me-2">Connexion</a>
                     <a th:href="@{/register}" class="btn btn-danger">Inscription</a>
                 </div>
+
             </div>
+
         </div>
     </div>
 </nav>
 
 <main class="container py-4 flex-grow-1">
-    <div th:replace="${content}"></div>
+    <div th:replace="${content}">
+    </div>
 </main>
 
-<footer class="bg-dark text-white-50 text-center py-4 mt-auto">
+<footer class="bg-dark text-white-50 text-center text-lg-start mt-auto py-4">
     <div class="container">
         <span class="text-muted">© 2025 E-Sport Bracket Master | Projet JEE</span>
     </div>

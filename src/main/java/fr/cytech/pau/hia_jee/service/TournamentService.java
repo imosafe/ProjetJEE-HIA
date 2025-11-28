@@ -4,16 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import fr.cytech.pau.hia_jee.model.Team;
-import fr.cytech.pau.hia_jee.repository.MatchRepository;
-import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
 
 import fr.cytech.pau.hia_jee.model.Match;
 import fr.cytech.pau.hia_jee.model.Team;
 import fr.cytech.pau.hia_jee.model.Tournament;
-
-import lombok.RequiredArgsConstructor;
+import fr.cytech.pau.hia_jee.repository.MatchRepository;
+import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 
 @Service
 //@RequiredArgsConstructor // 1. Génère le constructeur pour l'injection des Repos
@@ -158,5 +155,14 @@ public class TournamentService {
             tournament.setStatus(Tournament.StatusTournament.TERMINE);
             tRepo.save(tournament);
         }
+    }
+
+
+    public void save(Tournament tournament) {
+        tRepo.save(tournament);
+    }
+
+    public List<Tournament> findAll() {
+        return tRepo.findAll();
     }
 }
