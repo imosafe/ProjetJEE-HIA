@@ -16,7 +16,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String role; // "ADMIN" or "PLAYER"
+    @Enumerated(EnumType.STRING) // IMPORTANT : Stocke "ADMIN" en texte dans la BDD, pas le chiffre 0
+    private Role role;
 
     // N-1 Relationship: Many Users belong to One Team
     @ManyToOne
@@ -26,7 +27,7 @@ public class User {
     // Constructors
     public User() {}
 
-    public User(String username, String password, String role) {
+    public User(String username, String password, Role role) {
         this.username = username;
         this.password = password;
         this.role = role;
@@ -42,8 +43,8 @@ public class User {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
     public Team getTeam() { return team; }
     public void setTeam(Team team) { this.team = team; }

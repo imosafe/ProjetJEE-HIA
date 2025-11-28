@@ -1,5 +1,6 @@
 package fr.cytech.pau.hia_jee.service;
 
+import fr.cytech.pau.hia_jee.model.Role;
 import fr.cytech.pau.hia_jee.model.Team;
 import fr.cytech.pau.hia_jee.model.User;
 import fr.cytech.pau.hia_jee.repository.TeamRepository;
@@ -19,30 +20,29 @@ public class UserService {
     private TeamRepository teamRepository;
 
     /**
-     * Enregistre un nouvel utilisateur en base.
-     * Vérifie d'abord si le pseudo est disponible.
+     * Enregistre un nouvel utilisateur.
+     * Force le rôle PLAYER par défaut.
      */
     public User register(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("Username already exists!");
+            throw new RuntimeException("Ce nom d'utilisateur est déjà pris !");
         }
-        // Par défaut, on peut forcer le rôle PLAYER si ce n'est pas précisé
-        if (user.getRole() == null || user.getRole().isEmpty()) {
-            user.setRole("PLAYER");
-        }
+
+        // C'est ici qu'on utilise l'Enum pour la sécurité
+        user.setRole(Role.PLAYER);
+
         return userRepository.save(user);
     }
 
     /**
-     * Vérifie le couple pseudo/mot de passe.
-     * Retourne le User si OK, sinon null.
+     * Authentification simple.
      */
     public User authenticate(String username, String password) {
         Optional<User> optUser = userRepository.findByUsername(username);
 
         if (optUser.isPresent()) {
             User user = optUser.get();
-            // Comparaison simple (Pour un projet scolaire sans Spring Security avancé)
+            // Comparaison simple du mot de passe (en clair pour ce projet scolaire)
             if (user.getPassword().equals(password)) {
                 return user;
             }
@@ -52,26 +52,30 @@ public class UserService {
 
     /**
      * Permet à un utilisateur de rejoindre une équipe.
-     * Gère la relation 1-N.
      */
     public void joinTeam(Long userId, Long teamId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        Team team = teamRepository.findById(teamId).orElseThrow(() -> new RuntimeException("Team not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Équipe introuvable"));
 
         // Règle métier : Un joueur ne peut pas être dans deux équipes
         if (user.getTeam() != null) {
-            throw new RuntimeException("User is already in a team! Leave it first.");
+            throw new RuntimeException("Vous êtes déjà dans une équipe ! Quittez-la d'abord.");
         }
 
         user.setTeam(team);
-        userRepository.save(user); // Sauvegarde la mise à jour de la clé étrangère
+        userRepository.save(user);
     }
 
     /**
-     * Permet à un utilisateur de quitter son équipe.
+     * Quitter une équipe
      */
     public void leaveTeam(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
         user.setTeam(null);
         userRepository.save(user);
     }

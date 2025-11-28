@@ -1,6 +1,6 @@
 package fr.cytech.pau.hia_jee.controller;
 
-
+import fr.cytech.pau.hia_jee.model.Role;
 import fr.cytech.pau.hia_jee.model.User;
 import fr.cytech.pau.hia_jee.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -22,19 +22,18 @@ public class AuthController {
 
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
-        model.addAttribute("user", new User()); // Objet vide pour le formulaire Thymeleaf
-        return "auth/register"; // Renvoie vers templates/auth/register.html
+        model.addAttribute("user", new User());
+        return "auth/register"; // Assure-toi que le fichier est dans templates/auth/register.html
     }
 
     @PostMapping("/register")
     public String processRegister(@ModelAttribute User user, Model model) {
         try {
-            // Par défaut, tout nouvel inscrit est un PLAYER (sécurité)
-            user.setRole("PLAYER");
+            // Le service va se charger de mettre le Role.PLAYER
             userService.register(user);
-            return "redirect:/login?success"; // Redirection vers login après succès
+            return "redirect:/login?success"; // Renvoie vers le login avec message vert
         } catch (RuntimeException e) {
-            // En cas d'erreur (ex: pseudo déjà pris), on recharge la page avec le message
+            // En cas d'erreur (pseudo pris), on recharge la page avec l'erreur
             model.addAttribute("error", e.getMessage());
             return "auth/register";
         }
@@ -44,7 +43,7 @@ public class AuthController {
 
     @GetMapping("/login")
     public String showLoginForm() {
-        return "auth/login"; // Renvoie vers templates/auth/login.html
+        return "auth/login"; // Assure-toi que le fichier est dans templates/auth/login.html
     }
 
     @PostMapping("/login")
@@ -53,22 +52,24 @@ public class AuthController {
                                HttpSession session,
                                Model model) {
 
-        // Appel au service créé précédemment
         User user = userService.authenticate(username, password);
 
         if (user != null) {
-            // C'est ICI que la magie de la sécurité manuelle opère
-            // On stocke l'objet user entier dans la session du serveur
+            // 1. On stocke l'objet User complet en session
             session.setAttribute("user", user);
 
-            // Redirection selon le rôle
-            if ("ADMIN".equals(user.getRole())) {
-                return "redirect:/admin/dashboard";
+            // 2. Redirection intelligente selon le Rôle (Enum)
+            if (user.getRole() == Role.ADMIN) {
+                // Les admins vont vers leur dashboard (à créer plus tard par Dev A ou C)
+                // Pour l'instant, redirigeons vers l'accueil pour éviter une 404
+                return "redirect:/";
             } else {
-                return "redirect:/"; // Accueil pour les joueurs
+                // Les joueurs vont vers l'accueil
+                return "redirect:/";
             }
         } else {
-            model.addAttribute("error", "Invalid username or password");
+            // Login échoué
+            model.addAttribute("error", "Nom d'utilisateur ou mot de passe incorrect.");
             return "auth/login";
         }
     }

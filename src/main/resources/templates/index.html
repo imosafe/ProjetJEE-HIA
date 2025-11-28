@@ -1,48 +1,59 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(title=~{::title}, content=~{::section})}">
 <head>
-    <meta charset="UTF-8">
-    <title>Accueil - E-Sport Bracket Master</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #212529; color: white; }
-        .hero { padding: 100px 0; text-align: center; }
-    </style>
+    <title>Accueil - Bracket Master</title>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary">
-    <div class="container">
-        <a class="navbar-brand" href="/">🎮 E-Sport Master</a>
-        <div class="d-flex">
-            <div th:if="${session.user != null}" class="d-flex align-items-center">
-                <span class="me-3 text-info">Bonjour, <span th:text="${session.user.username}">Pseudo</span> !</span>
-                <a href="/logout" class="btn btn-outline-danger btn-sm">Se déconnecter</a>
-            </div>
+<section>
 
-            <div th:unless="${session.user != null}">
-                <a href="/login" class="btn btn-outline-light btn-sm me-2">Connexion</a>
-                <a href="/register" class="btn btn-primary btn-sm">Inscription</a>
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm text-center">
+        <h1 class="display-4 fw-bold text-danger">Bienvenue dans l'Arène 🏆</h1>
+        <p class="col-md-8 fs-4 mx-auto text-muted">
+            L'outil ultime pour gérer vos tournois E-Sport. League of Legends, Valorant...
+            Rejoignez la compétition dès maintenant !
+        </p>
+
+        <div th:if="${session.user == null}" class="mt-4">
+            <a href="/register" class="btn btn-danger btn-lg px-4 gap-3">Créer un compte</a>
+            <a href="/tournaments" class="btn btn-outline-dark btn-lg px-4">Voir les tournois</a>
+        </div>
+
+        <div th:if="${session.user != null}" class="mt-4">
+            <div class="alert alert-success d-inline-block shadow-sm">
+                👋 Prêt à en découdre, <strong th:text="${session.user.username}">Pseudo</strong> ?
+            </div>
+            <br>
+
+            <a th:if="${session.user.role.name() == 'PLAYER'}" href="/my-team" class="btn btn-primary btn-lg mt-2 shadow">
+                <i class="bi bi-people-fill"></i> Mon Équipe
+            </a>
+
+            <a th:if="${session.user.role.name() == 'ADMIN'}" href="/admin/tournaments/new" class="btn btn-warning btn-lg mt-2 shadow">
+                <i class="bi bi-trophy-fill"></i> Créer un Tournoi
+            </a>
+        </div>
+    </div>
+
+    <div class="row align-items-md-stretch">
+        <div class="col-md-6 mb-3">
+            <div class="h-100 p-5 text-white bg-dark rounded-3 shadow">
+                <h2>📊 Derniers Résultats</h2>
+                <p>Consultez les brackets des tournois terminés et analysez les performances.</p>
+                <a href="/tournaments" class="btn btn-outline-light">Voir les stats</a>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="h-100 p-5 bg-white border rounded-3 shadow-sm">
+                <h2>🤝 Recrutement</h2>
+                <p>Joueur solo ? Trouvez une équipe qui recrute ou créez la vôtre.</p>
+                <a href="/teams/new" class="btn btn-outline-danger">Créer une équipe</a>
             </div>
         </div>
     </div>
-</nav>
 
-<div class="container hero">
-    <h1 class="display-4 fw-bold">Bienvenue dans l'arène 🏆</h1>
-    <p class="lead text-muted mb-5">Gérez vos tournois, créez vos équipes et dominez le bracket.</p>
-
-    <div th:if="${session.user != null}">
-        <div class="alert alert-success d-inline-block">
-            Vous êtes connecté en tant que <strong th:text="${session.user.role}">ROLE</strong>.
-        </div>
-    </div>
-
-    <div th:unless="${session.user != null}">
-        <p>Connectez-vous pour commencer.</p>
-        <a href="/login" class="btn btn-lg btn-light">Login</a>
-    </div>
-</div>
+</section>
 
 </body>
 </html>
