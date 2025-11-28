@@ -20,11 +20,20 @@ import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/admin/tournaments")
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class TournamentController {
     private final TournamentRepository tRepo;
     private final MatchRepository mRepo;
     private final TournamentService tService;
+
+    public TournamentController(TournamentRepository tRepo, MatchRepository mRepo, TournamentService tService) {
+        this.tRepo = tRepo;
+        this.mRepo = mRepo;
+        this.tService = tService;
+    }
+
+
+
     @GetMapping
     public String index(Model model,@RequestParam(required = false) String game){
         List<Tournament> tournaments;
