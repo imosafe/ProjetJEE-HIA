@@ -32,5 +32,53 @@ public class Tournament {
      @Enumerated(EnumType.STRING)
     private StatusTournament status;
     private double cashPrize;
-   
+
+    public double getCashPrize() {
+        return cashPrize;
+    }
+
+    public List<Match> getMatches() {
+        return matches;
+    }
+
+    public List<Sponsor> getSponsors() {
+        return Sponsors;
+    }
+
+    public List<Team> getTeams() {
+        return teams;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public StatusTournament getStatus() {
+        return status;
+    }
+
+    public void setCashPrize(double cashPrize) {
+        this.cashPrize = cashPrize;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setMatches(List<Match> matches) {
+        this.matches = matches;
+    }
+
+    public void setSponsors(List<Sponsor> sponsors) {
+        Sponsors = sponsors;
+    }
+
+    public void setStatus(StatusTournament status) {
+        this.status = status;
+    }
+
+    public void setTeams(List<Team> teams) {
+        this.teams = teams;
+    }
 }
+

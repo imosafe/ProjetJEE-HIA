@@ -4,20 +4,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import fr.cytech.pau.hia_jee.model.Team;
+import fr.cytech.pau.hia_jee.repository.MatchRepository;
+import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
 
 import fr.cytech.pau.hia_jee.model.Match;
 import fr.cytech.pau.hia_jee.model.Tournament;
-import fr.cytech.pau.hia_jee.repository.MatchRepository;
-import fr.cytech.pau.hia_jee.repository.TournamentRepository;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor // 1. Génère le constructeur pour l'injection des Repos
+//@RequiredArgsConstructor // 1. Génère le constructeur pour l'injection des Repos
 public class TournamentService {
 
     private final TournamentRepository tRepo;
     private final MatchRepository mRepo;
+
+    public TournamentService(TournamentRepository tRepo, MatchRepository mRepo) {
+        this.tRepo = tRepo;
+        this.mRepo = mRepo;
+    }
 
     public void generateBracket(Long tournamentId) {
         // --- ÉTAPE 1 : Préparation des données ---
