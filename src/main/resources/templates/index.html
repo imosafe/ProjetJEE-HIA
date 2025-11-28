@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil - E-Sport Bracket Master</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #212529; color: white; }
+        .hero { padding: 100px 0; text-align: center; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary">
+    <div class="container">
+        <a class="navbar-brand" href="/">🎮 E-Sport Master</a>
+        <div class="d-flex">
+            <div th:if="${session.user != null}" class="d-flex align-items-center">
+                <span class="me-3 text-info">Bonjour, <span th:text="${session.user.username}">Pseudo</span> !</span>
+                <a href="/logout" class="btn btn-outline-danger btn-sm">Se déconnecter</a>
+            </div>
+
+            <div th:unless="${session.user != null}">
+                <a href="/login" class="btn btn-outline-light btn-sm me-2">Connexion</a>
+                <a href="/register" class="btn btn-primary btn-sm">Inscription</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container hero">
+    <h1 class="display-4 fw-bold">Bienvenue dans l'arène 🏆</h1>
+    <p class="lead text-muted mb-5">Gérez vos tournois, créez vos équipes et dominez le bracket.</p>
+
+    <div th:if="${session.user != null}">
+        <div class="alert alert-success d-inline-block">
+            Vous êtes connecté en tant que <strong th:text="${session.user.role}">ROLE</strong>.
+        </div>
+    </div>
+
+    <div th:unless="${session.user != null}">
+        <p>Connectez-vous pour commencer.</p>
+        <a href="/login" class="btn btn-lg btn-light">Login</a>
+    </div>
+</div>
+
+</body>
+</html>
