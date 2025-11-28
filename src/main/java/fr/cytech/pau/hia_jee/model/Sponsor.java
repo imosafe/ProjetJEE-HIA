@@ -1,10 +1,13 @@
-
 package fr.cytech.pau.hia_jee.model;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.GenerationType; // Import nécessaire pour @ManyToMany
+import jakarta.persistence.Id; // Import nécessaire pour Set
+import jakarta.persistence.ManyToMany; // Import nécessaire pour HashSet
 
 @Entity 
 public class Sponsor {
@@ -15,9 +18,9 @@ public class Sponsor {
 
     private String name;
     
-    // Relation ManyToMany (côté passif)
-    //@ManyToMany(mappedBy = "sponsors") 
-    //private Set<Tournament> tournaments = new HashSet<>(); 
+    // Relation ManyToMany
+    @ManyToMany(mappedBy = "Sponsors") 
+    private Set<Tournament> tournaments = new HashSet<>(); 
 
     public Sponsor() {}
     public Sponsor(String name) {
@@ -40,8 +43,8 @@ public class Sponsor {
 
 
    //liste des tournois associés à un sponsor
-    //public Set<Tournament> getTournaments() {
-      //  return tournaments;
-    //}
+    public Set<Tournament> getTournaments() {
+       return tournaments;
+    }
 
 }

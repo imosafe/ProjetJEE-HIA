@@ -10,6 +10,7 @@ import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
 
 import fr.cytech.pau.hia_jee.model.Match;
+import fr.cytech.pau.hia_jee.model.Team;
 import fr.cytech.pau.hia_jee.model.Tournament;
 
 import lombok.RequiredArgsConstructor;
@@ -126,5 +127,36 @@ public class TournamentService {
         // À la fin, update du statut du tournoi
         tournament.setStatus(Tournament.StatusTournament.EN_COURS);
         tRepo.save(tournament);
+    }
+    public void enterScore(Long matchId, int scoreA, int scoreB){
+        Match match =mRepo.findById(matchId).orElseThrow(()->new RuntimeException("Match introuvable"));
+        if(match.getTeamA()==null|| match.getTeamB()==null){
+            throw new RuntimeException("Match incomplet:impossible de saisir un score.");
+        }
+        match.setScoreA(scoreA);
+        match.setScoreB(scoreB);
+        Team winner;
+        if(scoreA>scoreB){
+            winner=match.getTeamA();
+        }else if(scoreB> scoreA){
+            winner=match.getTeamB();
+        }else{
+            throw new RuntimeException("Match nul interdit! il faut un vainqueur.");
+        }
+        match.setWinner(winner);
+        mRepo.save(match);
+        Match nextMatch = match.getNextMatch();
+        if(nextMatch!=null){
+            if(nextMatch.getTeamA()==null){
+                nextMatch.setTeamA(winner);
+            }else{
+                nextMatch.setTeamB(winner);
+            }
+            mRepo.save(nextMatch);
+        }else{
+            Tournament tournament = match.getTournament();
+            tournament.setStatus(Tournament.StatusTournament.TERMINE);
+            tRepo.save(tournament);
+        }
     }
 }

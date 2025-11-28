@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::#tournament-form-content})}">
+<head>
+    <title>Créer un Nouveau Tournoi</title>
+</head>
+<body>
+
+    <div id="tournament-form-content">
+        <div class="container mt-5">
+            <h1 class="mb-4 text-danger">Configuration du Tournoi et des Sponsors</h1>
+            
+            <form th:action="@{/hia_jee/admin/tournaments}" th:object="${tournament}" method="post">
+                
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nom du Tournoi:</label>
+                    <input type="text" id="name" th:field="*{name}" class="form-control" required>
+                </div>
+                
+                <h3 class="mt-4 text-warning">Sponsors Partenaires (Sélectionnez les sponsors associés)</h3>
+                <div class="border p-3 mb-4" style="background-color: #333; border-color: #ff4500 !important;">
+                    
+                    <p th:if="${allSponsors.isEmpty()}" class="text-white-50">⚠️ Aucun sponsor n'est disponible. Créez-en d'abord.</p>
+                    
+                    <div th:each="sponsor : ${allSponsors}" class="form-check form-check-inline">
+                        
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               th:value="${sponsor.id}" 
+                               th:field="*{sponsors}" 
+                               th:id="${'sponsor-' + sponsor.id}">
+                        
+                        <label class="form-check-label text-white" th:for="${'sponsor-' + sponsor.id}">
+                            <span th:text="${sponsor.name}">Nom du Sponsor</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-danger mt-4">Sauvegarder et Continuer</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
