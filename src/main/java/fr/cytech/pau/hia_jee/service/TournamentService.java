@@ -165,4 +165,8 @@ public class TournamentService {
     public List<Tournament> findAll() {
         return tRepo.findAll();
     }
+
+    public java.util.Optional<Tournament> findById(Long id) {
+        return tRepo.findById(id);
+    }
 }
