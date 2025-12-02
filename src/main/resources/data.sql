@@ -1,7 +1,6 @@
--- 1. Insérer l'Admin (si pas déjà là)
-INSERT INTO app_users (username, password, role)
-SELECT 'admin', 'admin123', 'ADMIN'
-    WHERE NOT EXISTS (SELECT 1 FROM app_users WHERE username = 'admin');
+-- 1. Insérer ou mettre à jour l'Admin
+DELETE FROM app_users WHERE username = 'admin';
+INSERT INTO app_users (username, password, role) VALUES ('admin', 'admin123', 'ADMIN');
 
 -- 2. Insérer l'équipe T1 (si pas déjà là)
 INSERT INTO teams (name, logo_url)

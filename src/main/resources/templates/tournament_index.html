@@ -10,7 +10,7 @@
         <div class="container mt-5">
             <h1 class="text-danger mb-4">🏆 Catalogue des Tournois</h1>
             
-            <div class="mb-4">
+            <div class="mb-4" th:if="${session.user != null and session.user.role.name() == 'ADMIN'}" >
                 <a th:href="@{/admin/tournaments/new}" class="btn btn-warning">
                     <i class="fas fa-plus"></i> Créer un Tournoi 
                 </a>
