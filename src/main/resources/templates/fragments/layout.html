@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:fragment="layout(title, content)">
-<head th:fragment="header(title)">
+
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content)">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:replace="${title}">E-Sport Bracket Master</title>
+    <title th:text="${title}">E-Sport ProTeams</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -57,6 +57,41 @@
             box-shadow: 0 0 15px rgba(220, 53, 69, 0.6); /* Le fameux Glow rouge */
             transform: translateY(-2px);
         }
+
+
+        /* Pour les liens gris qui deviennent blancs au survol */
+.footer-link {
+    color: #adb5bd;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.footer-link:hover {
+    color: #fff;
+    padding-left: 5px;
+}
+
+/* Pour les boutons ronds des réseaux sociaux */
+.social-btn {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.social-btn:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: translateY(-3px);
+}
+       
+
+
+
     </style>
 </head>
 
@@ -114,39 +149,65 @@
     </div>
 </nav>
 
+
 <main class="container py-4 flex-grow-1">
     <div th:replace="${content}"></div>
 </main>
 
-
-<footer class="bg-dark text-white mt-auto border-top border-3 border-danger py-5 w-100">
+<footer class="bg-dark text-white mt-auto border-top border-3 border-danger py-3 w-100" 
+        style="background: linear-gradient(180deg, #212529 0%, #1a1a1a 100%);">
     
-    <div class="container-fluid" style="max-width: 65%;"> 
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div class="fw-bold" style="font-size: 1rem; letter-spacing: 1px;">
-                <a class="navbar-brand fst-italic fw-bold fs-3 text-uppercase" th:href="@{/}" style="letter-spacing: 2px;">
-            <i class="bi bi-controller text-danger"></i> Pro<span class="text-danger">Teams</span>
-        </a>
+    <div class="container-fluid" style="max-width: 90%;">
+        
+        <div class="row gy-4 justify-content-between">
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="mb-3">
+                    <a class="navbar-brand fst-italic fw-bold fs-3 text-uppercase text-decoration-none text-white" th:href="@{/}">
+                        <i class="bi bi-controller text-danger"></i> Pro<span class="text-danger">Teams</span>
+                    </a>
+                </div>
+                <p class="small text-white-50">
+                    La plateforme ultime pour gérer vos compétitions E-Sport.
+                    Rejoignez des milliers de joueurs, créez votre équipe et gravissez les échelons.
+                </p>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="#" class="social-btn"><i class="bi bi-discord"></i></a>
+                    <a href="#" class="social-btn"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" class="social-btn"><i class="bi bi-twitch"></i></a>
+                    <a href="#" class="social-btn"><i class="bi bi-youtube"></i></a>
+                </div>
             </div>
 
-           <div class="d-flex gap-3">
-              <a href="#" class="text-white hover-effect"><i class="bi bi-discord fs-4"></i></a>
-              <a href="#" class="text-white hover-effect"><i class="bi bi-twitter-x fs-4"></i></a>
-              <a href="#" class="text-white hover-effect"><i class="bi bi-twitch fs-4"></i></a>
-           </div>
-
-            <div class="text-white-50" style="font-size: 1.1rem;">
-                &copy; 2025 | Tous droits réservés
+            <div class="col-lg-3 col-md-3 col-6">
+                <h6 class="text-danger fw-bold text-uppercase mt-4 ">Compétition</h6>
+                <ul class="list-unstyled ">
+                    <li class="mb-2"><a href="/admin/tournaments" class="footer-link">Tous les Tournois</a></li>
+                    <li class="mb-2"><a href="#" class="footer-link">Classement d'equipes</a></li>
+                    <li class="mb-2"><a href="#" class="footer-link">Trouver une equipe</a></li>
+                </ul>
             </div>
+
+            <div class="col-lg-3 col-md-3 col-6">
+                <h6 class="text-danger fw-bold text-uppercase mt-4  ">Infos Pratiques</h6>
+                <ul class="list-unstyled ">
+                    <li class="mb-2"><a href="#" class="footer-link">Règlement Officiel</a></li>
+                    <li class="mb-2"><a href="#" class="footer-link">Support (FAQ)</a></li>
+                    <li class="mb-2"><a href="#" class="footer-link">Confidentialité</a></li>
+                </ul>
+            </div>
+
         </div>
 
-        <div class="text-center text-white-50 mt-2 pt-2 border-top border-secondary" style="font-size: 1.1rem;">
-            Plateforme E-Sport | 
-            <a href="#" class="text-white-50 text-decoration-none hover-link">Support</a> | 
-            <a href="#" class="text-white-50 text-decoration-none hover-link">Règlement</a>
+        <hr class="border-secondary my-4 opacity-25">
+
+        <div class="text-center">
+            <span class="small text-white-50">&copy; 2025 ProTeams E-Sport. Tous droits réservés.</span>
         </div>
+
     </div>
 </footer>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

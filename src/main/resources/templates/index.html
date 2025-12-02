@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout(title=~{::title}, content=~{::section})}">
-<head>
-    <title>Accueil - ProTeams</title>
-</head>
+      th:replace="~{fragments/layout :: layout('Accueil - ProTeams', ~{::section})}">
+      
 <body>
 
 <section>

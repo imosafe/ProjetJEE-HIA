@@ -1,29 +1,62 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout(~{::title}, ~{::#sponsor-form-content})}">
-<head>
-    <title>Créer un Sponsor</title>
-</head>
+      th:replace="~{fragments/layout :: layout('Nouveau Sponsor', ~{::content})}">
 <body>
+<div th:fragment="content" class="container mt-5">
+    <h2 class="text-danger mb-4">Nouveau Sponsor</h2>
 
-    <div id="sponsor-form-content">
-        <div class="container mt-5">
-            <h1 class="mb-4 text-danger">Créer un nouveau Sponsor</h1>
-            
-            <form th:action="@{/admin/sponsors}" th:object="${sponsor}" method="post">
-                <input type="hidden" th:field="*{id}" />
-
-                <div class="mb-3">
-                    <label for="name" class="form-label">Nom du Sponsor:</label>
-                    <input type="text" id="name" th:field="*{name}" class="form-control bg-dark text-white border-danger" required>
-                </div>
-                
-                <button type="submit" class="btn btn-danger">Enregistrer le Sponsor</button>
-                
-                <a th:href="@{/admin/sponsors}" class="btn btn-secondary">Annuler</a>
-            </form>
+    <form th:action="@{/admin/sponsors}" th:object="${sponsor}" method="post" class="card p-4 bg-dark text-white border-danger shadow-lg">
+    
+    <div class="mb-3">
+        <label class="form-label text-secondary small text-uppercase fw-bold">Nom du Sponsor</label>
+        <div class="input-group">
+            <span class="input-group-text bg-secondary border-0 text-white"><i class="bi bi-building"></i></span>
+            <input type="text" class="form-control bg-dark text-white border-secondary" th:field="*{name}" placeholder="Ex: Red Bull" required>
         </div>
     </div>
 
+    <div class="mb-3">
+        <label class="form-label text-secondary small text-uppercase fw-bold">URL Logo</label>
+        <div class="input-group">
+            <span class="input-group-text bg-secondary border-0 text-white"><i class="bi bi-image"></i></span>
+            <input type="url" class="form-control bg-dark text-white border-secondary" th:field="*{logoUrl}" placeholder="https://..." required>
+        </div>
+        <div class="form-text text-white-50">Lien direct vers l'image (png, jpg, svg)</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-secondary small text-uppercase fw-bold">Site Web</label>
+        <div class="input-group">
+            <span class="input-group-text bg-secondary border-0 text-white"><i class="bi bi-link-45deg"></i></span>
+            <input type="url" class="form-control bg-dark text-white border-secondary" th:field="*{websiteUrl}" placeholder="https://...">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-warning small text-uppercase fw-bold">Niveau</label>
+            <select class="form-select bg-dark text-white border-secondary" th:field="*{level}">
+                <option th:each="l : ${T(fr.cytech.pau.hia_jee.model.SponsorshipLevel).values()}"
+                        th:value="${l}" th:text="${l}"></option>
+            </select>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label text-info small text-uppercase fw-bold">Secteur d'activité</label>
+            <select class="form-select bg-dark text-white border-secondary" th:field="*{type}">
+                <option th:each="t : ${T(fr.cytech.pau.hia_jee.model.SponsorType).values()}"
+                        th:value="${t}" th:text="${t.displayName}"></option>
+            </select>
+        </div>
+    </div>
+
+    <div class="d-grid gap-2 mt-4">
+        <button type="submit" class="btn btn-danger fw-bold py-2">ENREGISTRER</button>
+        <a th:href="@{/admin/sponsors}" class="btn btn-outline-light btn-sm">Annuler</a>
+    </div>
+</form>
+    
+
+</div>
 </body>
 </html>

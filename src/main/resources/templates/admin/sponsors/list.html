@@ -1,47 +1,116 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout(~{::title}, ~{::#sponsor-list-content})}">
-<head>
-    <title>Gérer les Sponsors</title>
-</head>
+      th:replace="~{fragments/layout :: layout('Gestion Sponsors', ~{::content})}">
+
+      <style>
+        .form-control:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+      </style>
 <body>
-
-    <div id="sponsor-list-content">
-        <div class="container mt-5">
-            
-            <h1 class="mb-4 text-danger">Gestion des Sponsors</h1>
-            
-            <a th:href="@{/admin/sponsors/new}" class="btn btn-danger mb-3">
-                <i class="fas fa-plus"></i> Ajouter un nouveau Sponsor
-            </a>
-
-            <table class="table table-dark table-striped table-hover"> 
-                <thead class="table-danger">
-                    <tr>
-                        <th>ID</th>
-                        <th>Nom du Sponsor</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="sponsor : ${sponsors}">
-                        <td th:text="${sponsor.id}">1</td>
-                        <td th:text="${sponsor.name}">HyperX</td>
-                        <td>
-                            <a th:href="@{/admin/sponsors/delete/{id}(id=${sponsor.id})}"
-                               class="btn btn-sm btn-outline-light"
-                               onclick="return confirm('Confirmer la suppression ?')">
-                                Supprimer
-                            </a>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(sponsors)}">
-                        <td colspan="3" class="text-center text-muted">Aucun sponsor n'a encore été créé.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+<div th:fragment="content" class="container mt-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-danger fw-bold"><i class="bi bi-briefcase-fill"></i> Gestion des Sponsors</h1>
+        <a th:href="@{/admin/sponsors/new}" class="btn btn-warning fw-bold shadow-sm">
+            <i class="bi bi-plus-lg"></i> Ajouter
+        </a>
     </div>
 
+    <form method="get" th:action="@{/admin/sponsors}" class="mb-4">
+        <div class="input-group shadow-sm">
+            
+            <span class="input-group-text bg-dark border-secondary text-danger">
+                <i class="bi bi-search"></i>
+            </span>
+            
+            <input type="text" name="keyword" 
+                   class="form-control bg-dark text-white border-secondary" 
+                   th:value="${keyword}" 
+                   placeholder="Rechercher par nom, type ou niveau...">
+            
+            <button class="btn btn-danger fw-bold px-4 text-uppercase" type="submit">
+                Rechercher
+            </button>
+            
+            <a th:if="${keyword != null && keyword != ''}" 
+               th:href="@{/admin/sponsors}" 
+               class="btn btn-secondary px-3" 
+               title="Effacer la recherche">
+               <i class="bi bi-x-lg"></i>
+            </a>
+            
+        </div>
+    </form>
+
+    <div class="card bg-dark border-secondary shadow">
+        <table class="table table-dark table-hover align-middle mb-0">
+            <thead>
+                <tr class="text-uppercase text-muted small">
+                    <th class="ps-4">Logo</th>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Niveau</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="s : ${sponsors.content}">
+                    <td class="ps-4">
+                        <img th:src="${s.logoUrl}" style="height: 45px; background: white; padding: 2px; border-radius: 4px; object-fit: contain;">
+                    </td>
+                    
+                    <td>
+                        <span th:text="${s.name}" class="fw-bold fs-5">Nom</span>
+                        <br>
+                        <a th:if="${s.websiteUrl != null}" th:href="${s.websiteUrl}" target="_blank" class="small text-decoration-none text-info">
+                            <i class="bi bi-link-45deg"></i> Site web
+                        </a>
+                    </td>
+
+                    <td><span class="badge bg-secondary text-white" th:text="${s.type.displayName}">Type</span></td>
+
+                    <td>
+                        <span th:if="${s.level.name() == 'GOLD'}" class="badge text-dark border border-warning" style="background-color: #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);">GOLD 🏆</span>
+                        <span th:if="${s.level.name() == 'SILVER'}" class="badge text-dark border border-secondary" style="background-color: #E0E0E0;">SILVER 🥈</span>
+                        <span th:if="${s.level.name() == 'BRONZE'}" class="badge text-white border border-dark" style="background-color: #CD7F32;">BRONZE 🥉</span>
+                    </td>
+
+                    <td class="text-end pe-4">
+                        <a th:href="@{/admin/sponsors/delete/{id}(id=${s.id})}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ?');"><i class="bi bi-trash-fill"></i></a>
+                    </td>
+                </tr>
+                <tr th:if="${sponsors.totalElements == 0}">
+                    <td colspan="5" class="text-center text-muted py-4">Aucun sponsor trouvé.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav th:if="${sponsors.totalPages > 1}" class="mt-4">
+        <ul class="pagination justify-content-center">
+            
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link bg-dark text-white border-secondary" 
+                   th:href="@{/admin/sponsors(page=${currentPage - 1}, keyword=${keyword})}">&laquo; Précédent</a>
+            </li>
+
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, sponsors.totalPages - 1)}"
+                th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link bg-dark text-white border-secondary" 
+                   th:href="@{/admin/sponsors(page=${i}, keyword=${keyword})}"
+                   th:text="${i + 1}"
+                   th:style="${currentPage == i} ? 'background-color: #dc3545; border-color: #dc3545;' : ''">1</a>
+            </li>
+
+            <li class="page-item" th:classappend="${currentPage == sponsors.totalPages - 1} ? 'disabled'">
+                <a class="page-link bg-dark text-white border-secondary" 
+                   th:href="@{/admin/sponsors(page=${currentPage + 1}, keyword=${keyword})}">Suivant &raquo;</a>
+            </li>
+        </ul>
+    </nav>
+
+</div>
 </body>
 </html>

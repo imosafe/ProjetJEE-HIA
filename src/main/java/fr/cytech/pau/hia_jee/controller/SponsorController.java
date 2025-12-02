@@ -1,10 +1,8 @@
-package fr.cytech.pau.hia_jee.controller; // Le package de votre contrôleur est correct
+package fr.cytech.pau.hia_jee.controller;
 
-// Les imports ont été corrigés pour  le package de base 'fr.cytech.pau.hia_jee'
-
-import java.util.List;
- 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,22 +10,39 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import fr.cytech.pau.hia_jee.model.Sponsor;
 import fr.cytech.pau.hia_jee.service.SponsorService;
+import fr.cytech.pau.hia_jee.repository.SponsorRepository; // <-- Import du Repository pour la recherche
 
 @Controller 
 @RequestMapping("/admin/sponsors") 
 public class SponsorController {
 
     @Autowired
-    private SponsorService sponsorService;
+    private SponsorService sponsorService; // On garde ton service pour save/delete
 
-    // 1. Affiche la liste des sponsors (GET: /admin/sponsors)
+    @Autowired
+    private SponsorRepository sponsorRepository; // <-- On ajoute ça pour la méthode 'search'
+
+    // 1. Affiche la liste AVEC Pagination et Recherche
     @GetMapping 
-    public String listSponsors(Model model) {
-        List<Sponsor> sponsors = sponsorService.findAll();
-        model.addAttribute("sponsors", sponsors);
+    public String listSponsors(
+            Model model,
+            @RequestParam(name = "page", defaultValue = "0") int page,      // Page 0 par défaut
+            @RequestParam(name = "keyword", defaultValue = "") String keyword // Vide par défaut
+    ) {
+        // On crée la demande de page (page actuelle, 6 éléments max)
+        PageRequest pageable = PageRequest.of(page, 6);
+
+        // On appelle la méthode 'search' du Repository
+        Page<Sponsor> pageSponsors = sponsorRepository.search(keyword, pageable);
+
+        // On envoie le résultat (Page) à la vue
+        model.addAttribute("sponsors", pageSponsors);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("currentPage", page);
 
         return "/admin/sponsors/list"; 
     }
@@ -41,15 +56,12 @@ public class SponsorController {
     @PostMapping
     public String saveSponsor(@ModelAttribute Sponsor sponsor) {
         sponsorService.save(sponsor); 
-
         return "redirect:/admin/sponsors"; 
     }
 
-   @GetMapping("/delete/{id}")
-public String deleteSponsor(@PathVariable Long id) {
-    // Appel simple au service. C'est le service qui fera le travail sale.
-    sponsorService.deleteById(id); 
-    
-    return "redirect:/admin/sponsors";
-} 
+    @GetMapping("/delete/{id}")
+    public String deleteSponsor(@PathVariable Long id) {
+        sponsorService.deleteById(id); 
+        return "redirect:/admin/sponsors";
+    } 
 }
