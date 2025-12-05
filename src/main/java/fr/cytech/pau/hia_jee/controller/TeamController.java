@@ -11,7 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/teams") // Toutes les URL commencent par /teams
+@RequestMapping("/teams")
 public class TeamController {
 
     @Autowired
@@ -23,90 +23,70 @@ public class TeamController {
     // --- 1. Afficher "Mon Équipe" ---
     @GetMapping("/my")
     public String myTeam(HttpSession session, Model model) {
-        // Sécurité : On vérifie si l'utilisateur est connecté
         User sessionUser = (User) session.getAttribute("user");
-        if (sessionUser == null) {
-            return "redirect:/login";
-        }
-
-        // IMPORTANT : L'objet en session peut être "périmé".
-        // On demande à la BDD la version la plus fraîche de l'utilisateur pour voir s'il a une équipe.
-        // (Supposons que tu as ajouté findById dans UserService, sinon utilise le Repo direct)
-        // Ici, pour faire simple, on fait confiance à la session mise à jour.
+        if (sessionUser == null) return "redirect:/login";
 
         if (sessionUser.getTeam() != null) {
-            // L'utilisateur a une équipe, on l'envoie vers la page de profil
-            model.addAttribute("team", sessionUser.getTeam());
+            // On recharge l'équipe avec les membres (EAGER fetch)
+            Team freshTeam = teamService.findTeamWithMembers(sessionUser.getTeam().getId());
+            model.addAttribute("team", freshTeam);
             return "teams/my-team";
         } else {
-            // L'utilisateur n'a pas d'équipe, on affiche la page qui propose de créer/rejoindre
-            // (Tu peux créer un fichier no-team.html ou rediriger vers create)
             return "redirect:/teams/new";
         }
     }
 
-    // --- 2. Formulaire de Création (GET) ---
+    // --- 2. Formulaire de Création ---
     @GetMapping("/new")
     public String showCreateForm(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
+        if (user.getTeam() != null) return "redirect:/teams/my";
 
-        // Si le joueur a déjà une équipe, on l'empêche d'en créer une autre (Règle Métier)
-        if (user.getTeam() != null) {
-            return "redirect:/teams/my";
-        }
-
-        // On envoie un objet Team vide au formulaire pour qu'il le remplisse
         model.addAttribute("team", new Team());
-        return "teams/create"; // Cherche src/main/resources/templates/teams/create.html
+        return "teams/create";
     }
 
-    // --- 3. Traitement de la Création (POST) ---
+    // --- 3. Traitement Création ---
     @PostMapping("/new")
     public String processCreate(@ModelAttribute Team team, HttpSession session, Model model) {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser == null) return "redirect:/login";
 
         try {
-            // A. On enregistre l'équipe en base (le champ 'game' est rempli auto par le formulaire)
-            Team savedTeam = teamService.createTeam(team);
+            // Création avec définition du LEADER
+            Team savedTeam = teamService.createTeam(team, sessionUser);
 
-            // B. Le créateur rejoint l'équipe automatiquement (Relation User -> Team)
+            // Le user rejoint l'équipe
             userService.joinTeam(sessionUser.getId(), savedTeam.getId());
 
-            // C. MISE À JOUR DE LA SESSION
-            // C'est crucial : sinon l'utilisateur devra se reco pour voir son équipe
+            // Mise à jour Session
             sessionUser.setTeam(savedTeam);
             session.setAttribute("user", sessionUser);
 
-            return "redirect:/teams/my"; // Succès !
-
+            return "redirect:/teams/my";
         } catch (RuntimeException e) {
-            // En cas d'erreur (ex: Nom d'équipe déjà pris)
             model.addAttribute("error", e.getMessage());
-            return "teams/create"; // On recharge le formulaire avec l'erreur
+            return "teams/create";
         }
     }
 
-    // --- 4. Quitter l'équipe (POST) ---
+    // --- 4. Quitter l'équipe ---
     @PostMapping("/leave")
     public String leaveTeam(HttpSession session) {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser != null && sessionUser.getTeam() != null) {
-
-            // Logique métier pour quitter
             userService.leaveTeam(sessionUser.getId());
-
-            // Mise à jour de la session (on retire l'équipe de l'objet en mémoire)
             sessionUser.setTeam(null);
             session.setAttribute("user", sessionUser);
         }
-        return "redirect:/"; // Retour à l'accueil
+        return "redirect:/";
     }
 
     // --- 5. Catalogue des Équipes (GET) ---
     @GetMapping({"", "/"})
     public String listTeams(Model model) {
+        // On envoie la liste de TOUTES les équipes à la vue
         model.addAttribute("teams", teamService.findAllTeams());
         return "teams/list";
     }
@@ -120,21 +100,96 @@ public class TeamController {
         if (user == null) return "redirect:/login";
 
         try {
-            // Appel au service (Dev B) pour faire le lien
+            // Appel au service pour faire le lien en base de données
             userService.joinTeam(user.getId(), id);
 
-            // Mise à jour de la session (Important !)
-            // On récupère l'équipe fraîchement rejointe pour mettre à jour l'objet User en mémoire
-            Team joinedTeam = teamService.findById(id);
+            // MISE À JOUR DE LA SESSION (Crucial pour l'affichage immédiat)
+            // On récupère l'équipe fraîchement rejointe
+            Team joinedTeam = teamService.findTeamWithMembers(id);
             user.setTeam(joinedTeam);
             session.setAttribute("user", user);
 
-            // Succès -> On va vers "Mon Équipe"
+            // Succès -> On redirige vers la page "Mon Équipe"
             return "redirect:/teams/my";
 
         } catch (RuntimeException e) {
-            // Erreur (ex: Équipe pleine, déjà dans une team...)
-            // On redirige vers le catalogue avec un message d'erreur dans l'URL
+            // Erreur (ex: déjà dans une team) -> Retour à la liste avec message
+            return "redirect:/teams?error=" + e.getMessage();
+        }
+    }
+
+    // --- 7. DISSOUDRE L'ÉQUIPE (Nouveau) ---
+    @PostMapping("/dissolve")
+    public String dissolveTeam(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+
+        // Vérif sécurité de base
+        if (user == null || user.getTeam() == null) return "redirect:/login";
+
+        // On vérifie que c'est bien le chef via la BDD
+        Team team = teamService.findById(user.getTeam().getId());
+
+        // Si l'équipe a un chef et que ce n'est PAS l'utilisateur courant -> Erreur
+        if (team.getLeader() != null && !team.getLeader().getId().equals(user.getId())) {
+            return "redirect:/teams/my"; // Ou page d'erreur
+        }
+
+        // Dissolution
+        teamService.dissolveTeam(team.getId());
+
+        // Mise à jour session
+        user.setTeam(null);
+        session.setAttribute("user", user);
+
+        return "redirect:/";
+    }
+
+    // --- 8. Exclure un membre (KICK) ---
+    @PostMapping("/kick/{memberId}")
+    public String kickMember(@PathVariable Long memberId, HttpSession session) {
+        User sessionUser = (User) session.getAttribute("user");
+
+        // Sécurité de base
+        if (sessionUser == null) return "redirect:/login";
+
+        try {
+            // On appelle le service avec (ID du chef, ID du membre à virer)
+            userService.kickMember(sessionUser.getId(), memberId);
+
+            // Si ça marche, on recharge la page
+            return "redirect:/teams/my?success=Joueur exclu";
+
+        } catch (RuntimeException e) {
+            // Si erreur (ex: hack, pas le chef...), on affiche l'erreur
+            return "redirect:/teams/my?error=" + e.getMessage();
+        }
+    }
+
+    // --- 9. ROUTE D'INVITATION ---
+    @GetMapping("/invite/{code}")
+    public String joinByInvite(@PathVariable String code, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+
+        // 1. Si pas connecté -> Login
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            // 2. Le service fait le lien User <-> Team
+            userService.joinTeamByInviteCode(user.getId(), code);
+
+            // 3. IMPORTANT : Mise à jour de la session
+            // On récupère l'équipe pour mettre à jour l'objet User stocké en mémoire
+            Team joinedTeam = teamService.findByInviteCode(code);
+
+            user.setTeam(joinedTeam);
+            session.setAttribute("user", user);
+
+            return "redirect:/teams/my?success=Bienvenue dans l'équipe !";
+
+        } catch (RuntimeException e) {
+            // Si erreur (déjà en équipe, code faux...)
             return "redirect:/teams?error=" + e.getMessage();
         }
     }

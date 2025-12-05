@@ -3,6 +3,7 @@ package fr.cytech.pau.hia_jee.model;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "teams")
@@ -17,6 +18,9 @@ public class Team {
 
     private String logoUrl;
 
+    @Column(unique = true)
+    private String inviteCode;
+
     // --- C'EST CE CHAMP QUI MANQUE ---
     @Column(nullable = false)
     private String game; // "League of Legends", "Valorant", etc.
@@ -24,8 +28,13 @@ public class Team {
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<User> members = new ArrayList<>();
 
+    @OneToOne
+    private User leader;
+
     // Constructeurs
-    public Team() {}
+    public Team() {
+        this.inviteCode = UUID.randomUUID().toString();
+    }
 
     // Getters & Setters (Indispensables pour Thymeleaf !)
     public Long getId() { return id; }
@@ -43,4 +52,10 @@ public class Team {
 
     public List<User> getMembers() { return members; }
     public void setMembers(List<User> members) { this.members = members; }
+
+    public User getLeader() { return leader; }
+    public void setLeader(User leader) { this.leader = leader; }
+
+    public String getInviteCode() { return inviteCode; }
+    public void setInviteCode(String inviteCode) { this.inviteCode = inviteCode; }
 }
