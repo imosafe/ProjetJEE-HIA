@@ -4,12 +4,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType; // Import nécessaire pour @ManyToMany
-import jakarta.persistence.Id; // Import nécessaire pour Set
-import jakarta.persistence.ManyToMany; // Import nécessaire pour HashSet
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated; // Import nécessaire pour @ManyToMany
+import jakarta.persistence.GeneratedValue; // Import nécessaire pour Set
+import jakarta.persistence.GenerationType; // Import nécessaire pour HashSet
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 
 @Entity 
 public class Sponsor {
@@ -40,6 +40,7 @@ public class Sponsor {
     public Sponsor() {}
     public Sponsor(String name) {
         this.name = name;
+        
     }
 
     public Long getId() {
