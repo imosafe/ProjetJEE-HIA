@@ -17,20 +17,17 @@ public class Team {
 
     private String logoUrl;
 
-    // 1-N Relationship: One Team has many Members
-    // "mappedBy" refers to the 'team' field in the User class
+    // --- C'EST CE CHAMP QUI MANQUE ---
+    @Column(nullable = false)
+    private String game; // "League of Legends", "Valorant", etc.
+
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<User> members = new ArrayList<>();
 
-    // Constructors
+    // Constructeurs
     public Team() {}
 
-    public Team(String name, String logoUrl) {
-        this.name = name;
-        this.logoUrl = logoUrl;
-    }
-
-    // Getters & Setters
+    // Getters & Setters (Indispensables pour Thymeleaf !)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -39,6 +36,10 @@ public class Team {
 
     public String getLogoUrl() { return logoUrl; }
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
+
+    // --- ET SURTOUT CE GETTER ---
+    public String getGame() { return game; }
+    public void setGame(String game) { this.game = game; }
 
     public List<User> getMembers() { return members; }
     public void setMembers(List<User> members) { this.members = members; }

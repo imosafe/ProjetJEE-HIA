@@ -105,9 +105,8 @@ public class TeamController {
     }
 
     // --- 5. Catalogue des Équipes (GET) ---
-    @GetMapping("") // Mappe sur /teams (car la classe a @RequestMapping("/teams"))
+    @GetMapping({"", "/"})
     public String listTeams(Model model) {
-        // On récupère toutes les équipes via le service
         model.addAttribute("teams", teamService.findAllTeams());
         return "teams/list";
     }
