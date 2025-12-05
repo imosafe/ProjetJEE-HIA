@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/layout :: layout('Catalogue Équipes', ~{::section})">
+<body>
+
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-danger fw-bold"><i class="bi bi-people-fill"></i> Équipes en recrutement</h2>
+
+        <a href="/teams/new" class="btn btn-dark">
+            <i class="bi bi-plus-lg"></i> Créer ma propre équipe
+        </a>
+    </div>
+
+    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Oups !</strong> <span th:text="${param.error}">Erreur</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="row">
+        <div th:each="team : ${teams}" class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 hover-effect">
+
+                <div class="card-header bg-white text-center py-3 border-0">
+                    <img th:src="${team.logoUrl != null && !team.logoUrl.isEmpty() ? team.logoUrl : 'https://placehold.co/100x100?text=' + team.name}"
+                         class="rounded-circle mb-2 border border-3 border-danger"
+                         width="80" height="80" style="object-fit: cover;">
+                    <h5 class="card-title fw-bold mb-0" th:text="${team.name}">Nom</h5>
+                    <small class="text-muted" th:text="${team.game}">Jeu</small>
+                </div>
+
+                <div class="card-body text-center">
+                    <p class="mb-2 fw-bold"
+                       th:classappend="${team.members.size() >= 5 ? 'text-danger' : 'text-success'}">
+                        <i class="bi bi-person-fill"></i>
+                        <span th:text="${team.members.size()}">0</span> / 5 Joueurs
+                    </p>
+
+                    <div class="progress mb-3" style="height: 5px;">
+                        <div class="progress-bar bg-danger" role="progressbar"
+                             th:style="'width: ' + ${(team.members.size() * 20)} + '%'"></div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white border-0 pb-3 px-3">
+
+                    <a th:if="${session.user == null}" href="/login" class="btn btn-outline-secondary w-100">
+                        Connectez-vous pour rejoindre
+                    </a>
+
+                    <div th:if="${session.user != null}">
+
+                        <button th:if="${team.members.size() >= 5}" class="btn btn-secondary w-100" disabled>
+                            <i class="bi bi-lock-fill"></i> Complet
+                        </button>
+
+                        <button th:if="${team.members.size() < 5 && session.user.team != null}"
+                                class="btn btn-light text-muted w-100" disabled>
+                            Indisponible
+                        </button>
+
+                        <form th:if="${team.members.size() < 5 && session.user.team == null}"
+                              th:action="@{/teams/{id}/join(id=${team.id})}" method="post">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                Rejoindre l'escouade
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${teams.isEmpty()}" class="col-12 text-center py-5">
+            <p class="lead text-muted">Aucune équipe n'a été fondée pour l'instant.</p>
+            <a href="/teams/new" class="btn btn-primary btn-lg">Soyez le premier !</a>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="fragments/layout :: layout(title='Accueil - ProTeams', content=~{::section})">
+      th:replace="~{fragments/layout :: layout('Accueil - ProTeams', ~{::section})}">
 
 <body>
 
 <section>
+
     <div class="p-5 mb-4 bg-light rounded-3 shadow-sm text-center">
         <h1 class="display-4 fw-bold text-danger">Bienvenue dans l'Arène 🏆</h1>
+        <p class="col-md-8 fs-4 mx-auto text-muted">
+            L'outil ultime pour gérer vos tournois E-Sport. League of Legends, Valorant...
+            Rejoignez la compétition dès maintenant !
+        </p>
 
         <div th:if="${session.user == null}" class="mt-4">
             <a href="/register" class="btn btn-danger btn-lg px-4 gap-3">Créer un compte</a>
@@ -18,14 +23,34 @@
                 👋 Prêt à en découdre, <strong th:text="${session.user.username}">Pseudo</strong> ?
             </div>
             <br>
-            <a th:if="${session.user.role.name() == 'PLAYER'}" href="/teams/my" class="btn btn-primary btn-lg mt-2 shadow">
+
+            <a th:if="${session.user.role.name() == 'PLAYER'}" href="/my-team" class="btn btn-primary btn-lg mt-2 shadow">
                 <i class="bi bi-people-fill"></i> Mon Équipe
             </a>
-            <a th:if="${session.user.role.name() == 'ADMIN'}" href="/admin/tournaments" class="btn btn-warning btn-lg mt-2 shadow">
+
+            <a th:if="${session.user.role.name() == 'ADMIN'}" href="/admin/tournaments/new" class="btn btn-warning btn-lg mt-2 shadow">
                 <i class="bi bi-trophy-fill"></i> Créer un Tournoi
             </a>
         </div>
     </div>
+
+    <div class="row align-items-md-stretch">
+        <div class="col-md-6 mb-3">
+            <div class="h-100 p-5 text-white bg-dark rounded-3 shadow">
+                <h2>📊 Derniers Résultats</h2>
+                <p>Consultez les brackets des tournois terminés et analysez les performances.</p>
+                <a href="/tournaments" class="btn btn-outline-light">Voir les stats</a>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="h-100 p-5 bg-white border rounded-3 shadow-sm">
+                <h2>🤝 Recrutement</h2>
+                <p>Joueur solo ? Trouvez une équipe qui recrute ou créez la vôtre.</p>
+                <a href="/teams/new" class="btn btn-outline-danger">Créer une équipe</a>
+            </div>
+        </div>
+    </div>
+
 </section>
 
 </body>

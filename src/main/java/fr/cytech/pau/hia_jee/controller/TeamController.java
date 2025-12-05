@@ -103,4 +103,40 @@ public class TeamController {
         }
         return "redirect:/"; // Retour à l'accueil
     }
+
+    // --- 5. Catalogue des Équipes (GET) ---
+    @GetMapping("") // Mappe sur /teams (car la classe a @RequestMapping("/teams"))
+    public String listTeams(Model model) {
+        // On récupère toutes les équipes via le service
+        model.addAttribute("teams", teamService.findAllTeams());
+        return "teams/list";
+    }
+
+    // --- 6. Rejoindre une Équipe (POST) ---
+    @PostMapping("/{id}/join")
+    public String joinTeam(@PathVariable Long id, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+
+        // Sécurité : Faut être connecté
+        if (user == null) return "redirect:/login";
+
+        try {
+            // Appel au service (Dev B) pour faire le lien
+            userService.joinTeam(user.getId(), id);
+
+            // Mise à jour de la session (Important !)
+            // On récupère l'équipe fraîchement rejointe pour mettre à jour l'objet User en mémoire
+            Team joinedTeam = teamService.findById(id);
+            user.setTeam(joinedTeam);
+            session.setAttribute("user", user);
+
+            // Succès -> On va vers "Mon Équipe"
+            return "redirect:/teams/my";
+
+        } catch (RuntimeException e) {
+            // Erreur (ex: Équipe pleine, déjà dans une team...)
+            // On redirige vers le catalogue avec un message d'erreur dans l'URL
+            return "redirect:/teams?error=" + e.getMessage();
+        }
+    }
 }
