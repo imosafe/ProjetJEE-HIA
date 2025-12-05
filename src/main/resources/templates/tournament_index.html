@@ -22,6 +22,8 @@ th:replace="~{fragments/layout :: layout('Catalogue des Tournois', ~{::#main-con
                             <h5 class="card-title text-danger" th:text="${tournament.name}">Nom du Tournoi</h5>
                             <p class="card-text">Statut : <span class="badge bg-secondary">À venir</span></p>
                             <a href="#" class="btn btn-outline-light btn-sm">Voir Détails</a>
+                            
+                            <a th:href= "${isAdmin} ? @{/admin/tournaments} : @{/tournaments}" class="btn btn-outline-light btn-sm">Générer l'arbre du touroi</a>
                         </div>
                     </div>
                 </div>

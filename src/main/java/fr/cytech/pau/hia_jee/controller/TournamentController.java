@@ -17,7 +17,7 @@ import fr.cytech.pau.hia_jee.repository.MatchRepository;
 import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import fr.cytech.pau.hia_jee.service.SponsorService;
 import fr.cytech.pau.hia_jee.service.TournamentService;
-import lombok.RequiredArgsConstructor;
+//import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/admin/tournaments")

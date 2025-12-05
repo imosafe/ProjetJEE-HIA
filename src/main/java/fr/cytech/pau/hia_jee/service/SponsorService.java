@@ -9,7 +9,7 @@ import fr.cytech.pau.hia_jee.model.Sponsor;
 import fr.cytech.pau.hia_jee.model.Tournament;
 import fr.cytech.pau.hia_jee.repository.SponsorRepository;
 import fr.cytech.pau.hia_jee.repository.TournamentRepository;
-import lombok.RequiredArgsConstructor;
+//import lombok.RequiredArgsConstructor;
 
 @Service
 //@RequiredArgsConstructor
