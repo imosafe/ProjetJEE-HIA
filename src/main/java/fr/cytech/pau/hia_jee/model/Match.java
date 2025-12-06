@@ -10,8 +10,8 @@ public class Match {
     @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
-    @OneToOne
-    @JoinColumn(name="newt_match_id")
+    @ManyToOne
+    @JoinColumn(name="new_match_id")
     private Match nextMatch;
     @ManyToOne
     @JoinColumn(name="team_a_id")
