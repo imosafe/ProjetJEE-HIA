@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout('Mon Équipe', ~{::content})}">
+      th:replace="~{fragments/layout :: layout('Profil Équipe', ~{::content})}">
 <body>
 
 <div th:fragment="content">
 
+    <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i> <span th:text="${param.success}">Succès</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${param.error}">Erreur</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <div class="p-5 mb-4 bg-dark text-white rounded-3 shadow position-relative overflow-hidden border border-secondary">
         <div class="d-flex align-items-center flex-wrap gap-3">
-            <!-- Correction ici : Utilisation de team.name.substring(0,1) au lieu de #strings -->
             <img th:src="${team.logoUrl != null && !team.logoUrl.isEmpty() ? team.logoUrl : 'https://placehold.co/150x150/333/FFF?text=' + team.name.substring(0,1)}"
                  alt="Logo" class="rounded-circle border border-4 border-danger shadow"
                  style="width: 120px; height: 120px; object-fit: cover;">
@@ -24,15 +32,14 @@
     </div>
 
     <div class="row g-4">
+        
         <div class="col-lg-8">
             <div class="card shadow border-0 h-100">
                 <div class="card-header bg-white py-3 border-bottom border-danger border-2">
                     <h4 class="mb-0 text-dark fw-bold text-uppercase"><i class="bi bi-people-fill text-danger"></i> Roster</h4>
                 </div>
                 <div class="list-group list-group-flush">
-
                     <div th:each="member : ${team.members}" class="list-group-item d-flex justify-content-between align-items-center py-3">
-
                         <div class="d-flex align-items-center">
                             <i class="bi bi-person-circle fs-3 text-secondary me-3"></i>
                             <div>
@@ -42,29 +49,24 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
-
                             <span th:if="${team.leader != null and team.leader.id == member.id}" class="badge bg-warning text-dark">
                                 <i class="bi bi-star-fill"></i> CHEF
                             </span>
-
+                            
                             <span th:if="${session.user != null and member.username == session.user.username}"
                                   class="badge bg-success-subtle text-success border border-success">
                                 <i class="bi bi-person-check-fill"></i> VOUS
                             </span>
 
-                            <form th:if="${team.leader != null and team.leader.id == session.user.id and member.id != session.user.id}"
+                            <form th:if="${isLeader and member.id != session.user.id}"
                                   th:action="@{/teams/kick/{id}(id=${member.id})}" method="post"
-                                  onsubmit="return confirm('Êtes-vous sûr de vouloir exclure ce joueur ?');">
-
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Exclure ce joueur">
+                                  onsubmit="return confirm('Exclure ce joueur ?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Exclure">
                                     <i class="bi bi-person-x-fill"></i>
                                 </button>
                             </form>
-
                         </div>
                     </div>
-
-                    <!-- CORRECTION ICI : Utilisation de #lists.isEmpty() qui est plus robuste -->
                     <div th:if="${#lists.isEmpty(team.members)}" class="p-4 text-center text-muted">
                         Aucun membre pour l'instant.
                     </div>
@@ -75,40 +77,57 @@
         <div class="col-lg-4">
             <div class="card shadow border-0 mb-4">
                 <div class="card-body">
-                    <h5 class="card-title fw-bold text-uppercase mb-3">Gestion d'équipe</h5>
+                    <h5 class="card-title fw-bold text-uppercase mb-3">Action</h5>
 
-                    <!-- Protection : On affiche le bouton seulement si le code existe -->
-                    <div th:if="${team.inviteCode != null}">
-                        <input type="hidden" id="invitePath" th:value="@{/teams/invite/{code}(code=${team.inviteCode})}">
-
-                        <button type="button" class="btn btn-outline-dark w-100 mb-2" onclick="copyInviteLink()">
-                            <i class="bi bi-share"></i> Inviter des joueurs
-                        </button>
+                    <div th:unless="${session.user != null}" class="text-center">
+                        <p class="small text-muted">Connectez-vous pour interagir avec cette équipe.</p>
+                        <a th:href="@{/login}" class="btn btn-dark w-100">Se connecter</a>
                     </div>
 
-                    <!-- Message d'avertissement pour les vieilles équipes sans code -->
-                    <div th:if="${team.inviteCode == null}" class="alert alert-warning small p-2 text-center">
-                        <i class="bi bi-exclamation-triangle-fill"></i> Code d'invitation manquant.<br>
-                        <strong>Veuillez dissoudre et recréer l'équipe.</strong>
-                    </div>
-
-                    <form th:unless="${team.leader != null and team.leader.id == session.user.id}"
-                          th:action="@{/teams/leave}" method="post"
-                          onsubmit="return confirm('Voulez-vous vraiment quitter cette équipe ?');">
-                        <button type="submit" class="btn btn-outline-warning w-100 mt-2">
-                            <i class="bi bi-box-arrow-right"></i> Quitter l'équipe
-                        </button>
-                    </form>
-
-                    <div th:if="${team.leader != null and team.leader.id == session.user.id}" class="mt-4 border-top pt-3">
-                        <p class="text-danger small fw-bold mb-2 text-center"><i class="bi bi-exclamation-triangle-fill"></i> ZONE DANGEREUSE</p>
-
-                        <form th:action="@{/teams/dissolve}" method="post"
-                              onsubmit="return confirm('ATTENTION : Vous allez supprimer définitivement l\'équipe.\n\n- Tous les membres seront exclus.\n- Cette action est irréversible.\n\nÊtes-vous sûr ?');">
-                            <button type="submit" class="btn btn-danger w-100 fw-bold">
-                                <i class="bi bi-trash3-fill"></i> DISSOUDRE L'ÉQUIPE
+                    <div th:if="${canJoin}">
+                        <form th:action="@{/teams/{id}/join(id=${team.id})}" method="post">
+                            <button type="submit" class="btn btn-success w-100 fw-bold text-uppercase py-2">
+                                <i class="bi bi-person-plus-fill"></i> Rejoindre l'équipe
                             </button>
                         </form>
+                    </div>
+
+                    <div th:if="${isMember}">
+                        <div class="alert alert-success py-2 text-center small mb-3">
+                            <i class="bi bi-check-circle"></i> Vous êtes membre.
+                        </div>
+
+                        <form th:unless="${isLeader}" th:action="@{/teams/leave}" method="post"
+                              onsubmit="return confirm('Quitter cette équipe ?');">
+                            <button type="submit" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-box-arrow-right"></i> Quitter l'équipe
+                            </button>
+                        </form>
+
+                        <div th:if="${isLeader}" class="mt-3 pt-3 border-top">
+                            <p class="text-danger small fw-bold mb-2 text-center"><i class="bi bi-shield-lock-fill"></i> ADMIN ÉQUIPE</p>
+                            
+                            <div th:if="${team.inviteCode != null}" class="mb-2">
+                                <input type="hidden" id="invitePath" th:value="@{/teams/invite/{code}(code=${team.inviteCode})}">
+                                <button type="button" class="btn btn-outline-dark w-100 btn-sm" onclick="copyInviteLink()">
+                                    <i class="bi bi-share"></i> Copier lien d'invitation
+                                </button>
+                            </div>
+
+                            <form th:action="@{/teams/dissolve}" method="post"
+                                  onsubmit="return confirm('ATTENTION : Dissoudre l\'équipe ? Action irréversible.');">
+                                <button type="submit" class="btn btn-danger w-100 btn-sm fw-bold">
+                                    <i class="bi bi-trash3-fill"></i> DISSOUDRE
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div th:if="${session.user != null and !canJoin and !isMember}" class="text-center">
+                        <button class="btn btn-secondary w-100 disabled" disabled>
+                            Vous avez déjà une équipe
+                        </button>
+                        <small class="text-muted d-block mt-2">Quittez votre équipe actuelle pour rejoindre celle-ci.</small>
                     </div>
 
                 </div>
@@ -125,34 +144,20 @@
             </div>
         </div>
     </div>
-
-    <!-- SCRIPT JS DÉPLACÉ À L'INTÉRIEUR DU FRAGMENT -->
+    
     <script>
         function copyInviteLink() {
             var inviteInput = document.getElementById("invitePath");
-            if (!inviteInput) return; // Sécurité si le bouton est caché
-
-            // 1. On récupère le chemin relatif (/teams/invite/xyz...)
-            var path = inviteInput.value;
-
-            // 2. On reconstruit l'URL complète avec le domaine actuel (localhost:8080)
-            var fullUrl = window.location.origin + path;
-
-            // 3. On copie
+            if (!inviteInput) return;
+            var fullUrl = window.location.origin + inviteInput.value;
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(fullUrl).then(function() {
-                    alert("Lien copié ! Partagez-le :\n" + fullUrl);
-                }, function() {
-                    alert("Erreur de copie. Voici le lien :\n" + fullUrl);
-                });
+                navigator.clipboard.writeText(fullUrl).then(() => alert("Lien copié !"), () => alert("Erreur copie"));
             } else {
-                // Fallback pour anciens navigateurs ou contextes non sécurisés
-                alert("Copiez ce lien manuellement :\n" + fullUrl);
+                alert("Lien : " + fullUrl);
             }
         }
     </script>
-</div>
-<!-- Fin du fragment content -->
 
+</div>
 </body>
 </html>

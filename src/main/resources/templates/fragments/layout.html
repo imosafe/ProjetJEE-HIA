@@ -58,10 +58,21 @@
                 <li class="nav-item" th:if="${session.user != null and session.user.team != null}">
                     <a class="nav-link text-warning fw-bold" th:href="@{/teams/my}"><i class="bi bi-shield-fill"></i> Mon Équipe</a>
                 </li>
-                <li class="nav-item" th:if="${session.user != null and session.user.team == null}">
-                    <a class="nav-link text-success" th:href="@{/teams/new}"><i class="bi bi-plus-circle"></i> Créer Équipe</a>
+                <li class="nav-item" th:if="${session.user != null and session.user.team == null and session.user.role.name() != 'ADMIN' }">
+                    <a class="nav-link text-warning" th:href="@{/teams}">
+        <i class="bi bi-people-fill"></i> Équipes
+    </a>
                 </li>
-            </ul>
+
+                <li class="nav-item dropdown" th:if="${session.user != null and session.user.role.name() == 'ADMIN'}">
+                    <a class="nav-link dropdown-toggle text-danger" href="#" data-bs-toggle="dropdown">ADMIN</a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" th:href="@{/admin/sponsors}">Gestion des Sponsors</a></li>
+                        <li><a class="dropdown-item" th:href="@{/admin/tournaments}">Gestion des Tournois</a></li>
+                        <li><a class="dropdown-item" th:href="@{/teams}">Gestion d'équipe</a></li>
+                    </ul>
+                </li>
+                </ul>
 
             <div class="d-flex align-items-center gap-3">
                 <div th:unless="${session.user != null}">
@@ -92,7 +103,9 @@
 
 <footer class="bg-dark text-white mt-auto border-top border-3 border-danger py-3 w-100">
     <div class="container-fluid" style="max-width: 90%;">
-        <div class="row gy-4 justify-content-between">
+
+        <div class="row gy-4 justify-content-between offset-lg-1 " >
+
             <div class="col-lg-4 col-md-6">
                 <a class="navbar-brand fst-italic fw-bold fs-3 text-uppercase text-decoration-none text-white" th:href="@{/}">
                     <i class="bi bi-controller text-danger"></i> Pro<span class="text-danger">Teams</span>
@@ -107,22 +120,28 @@
             </div>
 
             <div class="col-lg-3 col-md-3 col-6">
-                <h6 class="text-danger fw-bold text-uppercase mt-4">Compétition</h6>
-                <ul class="list-unstyled">
-                    <li><a href="/tournaments" class="footer-link">Tous les Tournois</a></li>
+                <h5 class="text-danger fw-bold text-uppercase mt-4 ">Compétition</h5>
+                <ul class="list-unstyled ">
+                    <li class="mb-2"><a href="/tournaments" class="footer-link">Tous les Tournois</a></li>
                     <li class="mb-2"><a href="#" class="footer-link">Classement d'equipes</a></li>
                     <li><a href="/teams" class="footer-link">Toutes les équipes</a></li>
                 </ul>
             </div>
             <div class="col-lg-3 col-md-3 col-6">
-                <h6 class="text-danger fw-bold text-uppercase mt-4">Infos</h6>
-                <ul class="list-unstyled">
-                    <li><a href="#" class="footer-link">Règlement</a></li>
+                <h5 class="text-danger fw-bold text-uppercase mt-4  ">Infos Pratiques</h5>
+                <ul class="list-unstyled ">
+                    <li class="mb-2"><a href="#" class="footer-link">Règlement Officiel</a></li>
+                    <li class="mb-2"><a href="#" class="footer-link">Support (FAQ)</a></li>
+                    <li class="mb-2"><a href="#" class="footer-link">Confidentialité</a></li>
                 </ul>
             </div>
         </div>
         <hr class="border-secondary my-4 opacity-25">
-        <div class="text-center"><span class="small text-white-50">&copy; 2025 ProTeams E-Sport.</span></div>
+
+        <div class="text-center">
+            <span class=" text-white-50">&copy; 2025 ProTeams E-Sport. Tous droits réservés.</span>
+        </div>
+
     </div>
 </footer>
 

@@ -1,60 +1,137 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Inscription - E-Sport Master</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recrutement - ProTeams</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+
     <style>
-        body { background-color: #212529; color: #e9ecef; }
-        .card { background-color: #343a40; border-color: #495057; }
-        .form-control { background-color: #495057; border-color: #6c757d; color: white; }
-        .form-control:focus { background-color: #495057; color: white; border-color: #0d6efd; }
+        body, html { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: white; overflow: hidden; }
+        .container-fluid { height: 100vh; padding: 0; }
+
+        /* --- CÔTÉ GAUCHE : FORMULAIRE (Le Cockpit) --- */
+        .form-side {
+            background-color: #121212;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 10;
+            box-shadow: 10px 0 50px rgba(0,0,0,0.5); /* Ombre portée sur l'image */
+        }
+
+        .form-wrapper { width: 100%; max-width: 600px; padding: 70px;}
+
+        .brand-logo {
+            font-family: 'Teko', sans-serif; font-size: 2.5rem; color: white;
+            text-transform: uppercase; text-decoration: none; display: block; margin-bottom: 40px;
+        }
+        .brand-logo span { color: #dc3545; } /* Accent vert pour l'inscription */
+
+        .title { font-size: 2rem; font-weight: 700; margin-bottom: 10px; line-height: 1.1; }
+        .subtitle { color: #888; margin-bottom: 40px; font-size: 1rem; }
+
+        /* Inputs Modernes */
+        .form-label { font-size: 0.8rem; font-weight: 700; color: #666; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+        
+        .form-control {
+            background-color: #1e1e24; border: 1px solid #333; color: white;
+            padding: 15px; border-radius: 8px; font-size: 1rem; transition: 0.3s;
+        }
+        .form-control:focus {
+            background-color: #25252b; border-color: #00ff88;
+            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1); color: white;
+        }
+        .form-control::placeholder { color: #555; }
+
+        /* Bouton "Start Game" */
+        .btn-register {
+            background: #dc3545; color: rgb(255, 255, 255); width: 100%; padding: 15px;
+            font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+            border: none; border-radius: 8px; margin-top: 20px; transition: 0.3s;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%);
+        }
+        .btn-register:hover { background: #00e67a; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3); }
+
+        .login-link { margin-top: 30px; text-align: center; color: #666; font-size: 0.9rem; }
+        .login-link a { color: white; text-decoration: none; font-weight: 600; border-bottom: 1px solid #00ff88; }
+
+        /* --- CÔTÉ DROIT : VISUEL (L'Arène) --- */
+        .visual-side {
+            position: relative; overflow: hidden;
+            display: flex; align-items: flex-end; padding: 60px;
+        }
+        .bg-image {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('/images/ESPORT4.jpg');
+            background-size: cover; background-position: center;
+            /* Filtre vert subtil pour matcher l'inscription */
+            transition: transform 10s ease;
+        }
+        .visual-side:hover .bg-image { transform: scale(1.05); }
+        
+        .visual-content { position: relative; z-index: 2; max-width: 600px; }
+        .quote-box {
+            border-left: 4px solid #dc3545; padding-left: 30px;
+            background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+            padding: 30px; border-radius: 0 10px 10px 0;
+        }
+        .big-quote { font-family: 'Teko', sans-serif; font-size: 4rem; line-height: 0.9; text-transform: uppercase; margin-bottom: 15px; }
+        .author { color: #00ff88; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; }
+
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-dark mb-5 border-bottom border-secondary">
-    <div class="container">
-        <a class="navbar-brand" href="/">🎮 E-Sport Bracket Master</a>
-    </div>
-</nav>
+<div class="container-fluid">
+    <div class="row h-100">
+        
+        <div class="col-lg-4 col-md-5 form-side">
+            <div class="form-wrapper">
+                <a href="/" class="brand-logo">Pro<span>Teams</span></a>
+                
+                <div class="title">Initialisation du Profil</div>
+                <div class="p subtitle">Rejoignez le roster officiel de la saison 2025.</div>
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-lg">
-                <div class="card-header text-center bg-primary text-white">
-                    <h3>Créer un compte</h3>
+                <div th:if="${error}" class="alert alert-danger py-2 text-center small mb-4" style="background: rgba(220,53,69,0.1); border: 1px solid #dc3545; color: #ff6b6b;">
+                    <i class="bi bi-x-circle me-1"></i> <span th:text="${error}">Erreur</span>
                 </div>
-                <div class="card-body p-4">
 
-                    <div th:if="${error}" class="alert alert-danger" role="alert">
-                        ⚠️ <span th:text="${error}">Message d'erreur</span>
+                <form action="/register" method="post" th:object="${user}">
+                    <div class="mb-3">
+                        <label class="form-label">Identifiant Pilote</label>
+                        <input type="text" class="form-control" th:field="*{username}" placeholder="Ex: Name" required autofocus />
                     </div>
 
-                    <form action="/register" method="post" th:object="${user}">
+                    <div class="mb-4">
+                        <label class="form-label">Clé de Sécurité</label>
+                        <input type="password" class="form-control" th:field="*{password}" placeholder="Mot de passe " required />
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Nom d'utilisateur</label>
-                            <input type="text" class="form-control" id="username" th:field="*{username}" required>
-                        </div>
+                    <button type="submit" class="btn-register">
+                        Lancer l'Inscription <i class="bi bi-arrow-right-short ms-1" style="font-size: 1.2rem; vertical-align: middle;"></i>
+                    </button>
+                </form>
 
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Mot de passe</label>
-                            <input type="password" class="form-control" id="password" th:field="*{password}" required>
-                        </div>
-
-                        <div class="d-grid gap-2 mt-4">
-                            <button type="submit" class="btn btn-success btn-lg">S'inscrire 🚀</button>
-                        </div>
-                    </form>
-
-                </div>
-                <div class="card-footer text-center text-muted">
-                    Déjà un compte ? <a href="/login" class="text-decoration-none text-info">Se connecter ici</a>
+                <div class="login-link">
+                    Déjà inscrit au tournoi ? <a href="/login">Accéder au lobby</a>
                 </div>
             </div>
         </div>
+
+        <div class="col-lg-8 col-md-7 visual-side d-none d-md-flex">
+            <div class="bg-image"></div>
+            
+            <div class="visual-content">
+                <div class="quote-box">
+                    <div class="big-quote">
+                        La Victoire<br>Se Prépare<br>Maintenant.
+                    </div>
+                    <div class="author">// REJOIGNEZ L'ÉLITE</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
