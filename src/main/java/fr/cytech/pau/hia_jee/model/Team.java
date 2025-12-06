@@ -22,8 +22,8 @@ public class Team {
     private String inviteCode;
 
     // --- C'EST CE CHAMP QUI MANQUE ---
-    @Column(nullable = false)
-    private String game; // "League of Legends", "Valorant", etc.
+     @Enumerated(EnumType.STRING)
+    private Game game; // "League of Legends", "Valorant", etc.
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<User> members = new ArrayList<>();
@@ -47,8 +47,8 @@ public class Team {
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
 
     // --- ET SURTOUT CE GETTER ---
-    public String getGame() { return game; }
-    public void setGame(String game) { this.game = game; }
+    public Game getGame() { return game; }
+    public void setGame(Game game) { this.game = game; }
 
     public List<User> getMembers() { return members; }
     public void setMembers(List<User> members) { this.members = members; }

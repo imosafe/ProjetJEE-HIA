@@ -13,8 +13,9 @@
                 <img th:src="${team.logoUrl != null && !team.logoUrl.isEmpty() ? team.logoUrl : 'https://placehold.co/150x150/333/FFF?text=' + team.name.substring(0,1)}"
                      alt="Logo" class="rounded-circle border border-4 border-danger shadow"
                      style="width: 120px; height: 120px; object-fit: cover;">
+                
                 <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-danger border border-dark">
-                    <span th:text="${team.game}">JEU</span>
+                    <span th:text="${team.game.displayName}">JEU</span>
                 </span>
             </div>
 
@@ -124,16 +125,22 @@
                     
                     <div th:if="${team.tournaments != null and !team.tournaments.isEmpty()}" class="p-3 border-bottom bg-light">
                         <h6 class="text-success fw-bold small text-uppercase mb-3">
-                            <i class="bi bi-check-circle-fill"></i> Déjà Inscrits
+                            <i class="bi bi-check-circle-fill"></i> Inscrits
                         </h6>
                         <ul class="list-group list-group-flush border rounded-2">
                             <li th:each="t : ${team.tournaments}" class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
                                     <span class="fw-bold d-block" th:text="${t.name}">Nom Tournoi</span>
-                                    <small class="text-muted" th:text="${t.status}">STATUT</small>
+                                    
+                                    <span th:if="${t.status.name() == 'OUVERT'}" class="badge bg-secondary" style="font-size: 0.6rem;">À venir</span>
+                                    <span th:if="${t.status.name() == 'EN_COURS'}" class="badge bg-success" style="font-size: 0.6rem;">En cours</span>
+                                    <span th:if="${t.status.name() == 'TERMINE'}" class="badge bg-dark" style="font-size: 0.6rem;">Terminé</span>
                                 </div>
-                                <a th:href="@{/tournaments/tree/{id}(id=${t.id})}" class="btn btn-sm btn-outline-dark">
-                                    <i class="bi bi-diagram-3"></i>
+                                
+                                <a th:href="@{/tournaments/{id}(id=${t.id})}" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   title="Voir la fiche du tournoi">
+                                    <i class="bi bi-eye-fill"></i>
                                 </a>
                             </li>
                         </ul>
@@ -141,7 +148,7 @@
 
                     <div class="p-3">
                         <h6 class="text-primary fw-bold small text-uppercase mb-3">
-                            <i class="bi bi-calendar-plus"></i> Ouverts : <span th:text="${team.game}">Jeu</span>
+                            <i class="bi bi-calendar-plus"></i> Ouverts (<span th:text="${team.game.displayName}">Jeu</span>)
                         </h6>
 
                         <div th:if="${availableTournaments != null and !availableTournaments.isEmpty()}">
@@ -149,16 +156,13 @@
                                 <div class="card-body p-2 d-flex justify-content-between align-items-center">
                                     <div>
                                         <div class="fw-bold small text-dark" th:text="${t.name}">Tournoi</div>
-                                        <div class="text-success small fw-bold">
-                                            <i class="bi bi-cash-coin"></i> 
-                                            <span th:text="${t.cashPrize != null ? t.cashPrize + '€' : 'Honorifique'}"></span>
-                                        </div>
+                                        <div class="text-muted small">Statut : Ouvert</div>
                                     </div>
 
                                     <form th:if="${team.leader.id == session.user.id}" 
                                           th:action="@{/teams/register/{id}(id=${t.id})}" method="post">
                                         <button type="submit" class="btn btn-sm btn-success fw-bold text-uppercase" style="font-size: 0.75rem;">
-                                            S'inscrire
+                                            Rejoindre
                                         </button>
                                     </form>
                                     
@@ -170,7 +174,7 @@
                         </div>
 
                         <div th:if="${availableTournaments == null or availableTournaments.isEmpty()}" class="text-center text-muted py-3 small bg-light rounded border border-dashed">
-                            Aucun tournoi <em><span th:text="${team.game}"></span></em> ouvert aux inscriptions.
+                            Aucun tournoi disponible pour <strong th:text="${team.game.displayName}"></strong>.
                         </div>
                     </div>
                     
@@ -195,7 +199,7 @@
 
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(fullUrl).then(function() {
-                    alert("✅ Lien copié !\nEnvoyez-le à vos amis :\n\n" + fullUrl);
+                    alert("✅ Lien copié !\nPartagez-le pour recruter :\n\n" + fullUrl);
                 }, function() {
                     prompt("Copiez ce lien manuellement :", fullUrl);
                 });

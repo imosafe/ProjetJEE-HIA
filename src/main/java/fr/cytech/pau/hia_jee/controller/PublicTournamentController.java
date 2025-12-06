@@ -34,8 +34,6 @@ public class PublicTournamentController {
     // ==========================================
     @GetMapping
     public String list(Model model) {
-        // J'AI SUPPRIMÉ LA VÉRIFICATION DE SESSION ICI
-        // Maintenant, tout le monde peut voir la liste
         
         List<Tournament> tournaments = tournamentService.findAll();
         model.addAttribute("tournaments", tournaments);
@@ -46,8 +44,6 @@ public class PublicTournamentController {
     
     @GetMapping("/view/{id:[0-9]+}")
     public String view(@PathVariable Long id, Model model) {
-        // J'AI SUPPRIMÉ LA VÉRIFICATION DE SESSION ICI AUSSI
-        // Un visiteur doit pouvoir voir les détails du match sans être connecté
         
         Tournament tournament = tournamentService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tournoi introuvable"));

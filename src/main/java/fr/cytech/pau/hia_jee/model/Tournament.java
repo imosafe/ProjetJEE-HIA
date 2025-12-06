@@ -3,7 +3,6 @@ package fr.cytech.pau.hia_jee.model;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -43,14 +42,14 @@ public class Tournament {
     private List<Team> teams;
      @Enumerated(EnumType.STRING)
     private StatusTournament status;
-    @Column(nullable = false)
-    private String game;
+     @Enumerated(EnumType.STRING)
+    private Game game;
 
     ///getters and setters
-    public String getGame(){
+    public Game getGame(){
         return game;
     }
-    public void setGame(String game){
+    public void setGame(Game game){
         this.game=game;
     }
 

@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament,Long> {
-    List<Tournament> findByGameAndStatus(String game, StatusTournament status);
+    List<Tournament> findByStatus(StatusTournament status);
 }

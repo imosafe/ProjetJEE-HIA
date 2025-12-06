@@ -34,14 +34,15 @@
 
                         <div class="mb-3">
                             <label for="game" class="form-label fw-bold">Jeu de spécialité</label>
-                            <select class="form-select" id="game" th:field="*{game}" required>
-                                <option value="" disabled selected>-- Sélectionner un jeu --</option>
-                                <option value="League of Legends">League of Legends</option>
-                                <option value="Valorant">Valorant</option>
-                                <option value="Rocket League">Rocket League</option>
-                                <option value="CS2">Counter-Strike 2</option>
-                                <option value="Super Smash Bros">Super Smash Bros</option>
-                            </select>
+                            <select id="game" th:field="*{game}" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="" disabled selected>-- Choisir un jeu --</option>
+    
+                            <option th:each="g : ${T(fr.cytech.pau.hia_jee.model.Game).values()}"
+                            th:value="${g}" 
+                            th:text="${g.displayName}">
+                            Jeu
+                            </option>
+                        </select>
                         </div>
 
                         <div class="d-grid gap-2 mt-4">
