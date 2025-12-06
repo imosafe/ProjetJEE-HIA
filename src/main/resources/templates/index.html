@@ -28,8 +28,11 @@
                 <i class="bi bi-people-fill"></i> Mon Équipe
             </a>
 
-            <a th:if="${session.user.role.name() == 'ADMIN'}" href="/admin/tournaments/new" class="btn btn-warning btn-lg mt-2 shadow">
+            <a th:if="${session.user.role.name() == 'ADMIN'}" th:href="@{/admin/tournaments/new}" class="btn btn-warning btn-lg mt-2 shadow">
                 <i class="bi bi-trophy-fill"></i> Créer un Tournoi
+            </a>
+            <a th:if="${session.user.role.name() == 'ADMIN'}" th:href="@{/admin/sponsors/new}" class="btn btn-warning btn-lg mt-2 shadow">
+                <i class="bi bi-trophy-fill"></i> Créer un Sponsor
             </a>
         </div>
     </div>

@@ -50,10 +50,13 @@
         </button>
         <div class="collapse navbar-collapse" id="teamNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 fw-bold text-uppercase fs-6">
-                <li class="nav-item"><a class="nav-link" th:href="@{/tournaments}"><i class="bi bi-trophy text-warning"></i> Tournois</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/tournaments}">
+                    <i class="bi bi-trophy text-warning"></i> Tournois</a></li>
                 <li class="nav-item"><a class="nav-link" th:href="@{/ladder}">Classement</a></li>
-                <li class="nav-item" th:unless="${session.user != null}"><a class="nav-link text-info" th:href="@{/recruitment}"><i class="bi bi-search"></i> Mercato</a></li>
-                <li class="nav-item" th:if="${session.user != null}"><a class="nav-link" th:href="@{/planning}"><i class="bi bi-calendar-event"></i> Agenda</a></li>
+                <li class="nav-item" th:unless="${session.user != null}">
+                    <a class="nav-link text-info" th:href="@{/recruitment}"><i class="bi bi-search"></i> Mercato</a></li>
+                <li class="nav-item" th:if="${session.user != null}">
+                    <a class="nav-link" th:href="@{/planning}"><i class="bi bi-calendar-event"></i> Agenda</a></li>
 
                 <li class="nav-item" th:if="${session.user != null and session.user.team != null}">
                     <a class="nav-link text-warning fw-bold" th:href="@{/teams/my}"><i class="bi bi-shield-fill"></i> Mon Équipe</a>
@@ -78,7 +81,8 @@
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow-lg rounded-0 border-danger border-top">
                         <li><a class="dropdown-item" th:href="@{/profile}"><i class="bi bi-gear"></i> Paramètres</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" th:href="@{/logout}"><i class="bi bi-power"></i> Déconnexion</a></li>
+                        <li><a class="dropdown-item text-danger" 
+                            th:href="@{/logout}"><i class="bi bi-power"></i> Déconnexion</a></li>
                     </ul>
                 </div>
             </div>
@@ -109,9 +113,11 @@
             <div class="col-lg-3 col-md-3 col-6">
                 <h6 class="text-danger fw-bold text-uppercase mt-4">Compétition</h6>
                 <ul class="list-unstyled">
-                    <li><a href="/tournaments" class="footer-link">Tous les Tournois</a></li>
+                    <li><a th:href="@{/tournaments}" 
+                        class="footer-link">Tous les Tournois</a></li>
                     <li class="mb-2"><a href="#" class="footer-link">Classement d'equipes</a></li>
                     <li><a href="/teams" class="footer-link">Toutes les équipes</a></li>
+                    <li><a href="/sponsors" class="footer-link">Nos sponsors</a></li>
                 </ul>
             </div>
             <div class="col-lg-3 col-md-3 col-6">

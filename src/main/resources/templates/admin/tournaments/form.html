@@ -1,42 +1,130 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/layout :: layout(~{::title}, ~{::#tournament-form-content})}">
+      th:replace="~{fragments/layout :: layout(${tournament.id == null ? 'Nouveau Tournoi' : 'Modifier Tournoi'}, ~{::#tournament-form-content})}">
 <head>
-    <title>Créer un Nouveau Tournoi</title>
+    <title>Configuration Tournoi</title>
 </head>
 <body>
 
     <div id="tournament-form-content">
         <div class="container mt-5">
-            <h1 class="mb-4 text-danger">Configuration du Tournoi et des Sponsors</h1>
             
-            <form th:action="@{/admin/tournaments}" th:object="${tournament}" method="post">
-                
-                <div class="mb-3">
-                    <label for="name" class="form-label">Nom du Tournoi:</label>
-                    <input type="text" id="name" th:field="*{name}" class="form-control" required>
-                </div>
-                
-                <h3 class="mt-4 text-warning">Sponsors Partenaires (Sélectionnez les sponsors associés)</h3>
-                <div class="border p-3 mb-4" style="background-color: #333; border-color: #ff4500 !important;">
+            <div class="d-flex align-items-center mb-4">
+                <h1 class="text-danger fw-bold me-3">
+                    <i class="bi bi-joystick"></i> Configuration Tournoi
+                </h1>
+                <span class="badge bg-warning text-dark" 
+                      th:text="${tournament.id == null ? 'CRÉATION' : 'ÉDITION'}">MODE</span>
+            </div>
+            
+            <div class="card bg-dark text-white border-danger shadow-lg">
+                <div class="card-body p-4">
                     
-                    <p th:if="${allSponsors.isEmpty()}" class="text-white-50">⚠️ Aucun sponsor n'est disponible. Créez-en d'abord.</p>
-                    
-                    <div th:each="sponsor : ${allSponsors}" class="form-check form-check-inline">
+                    <form th:action="@{/admin/tournaments}" th:object="${tournament}" method="post">
                         
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               th:value="${sponsor.id}" 
-                               th:field="*{sponsors}" 
-                               th:id="${'sponsor-' + sponsor.id}">
+                        <input type="hidden" th:field="*{id}" />
+
+                        <h4 class="text-white border-bottom border-secondary pb-2 mb-3">
+                            <i class="bi bi-info-circle"></i> Informations
+                        </h4>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label text-secondary small text-uppercase fw-bold">Nom du Tournoi</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-secondary border-0 text-white">
+                                        <i class="bi bi-trophy-fill"></i>
+                                    </span>
+                                    <input type="text" id="name" th:field="*{name}" 
+                                           class="form-control bg-dark text-white border-secondary" 
+                                           placeholder="Ex: Winter Cup 2025" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="game" class="form-label text-secondary small text-uppercase fw-bold">Jeu de spécialité</label>
+                                <div class="input-group">
+                                    <div class="mb-3">
+        
+                                <select  class="form-select bg-dark text-white border-secondary" id="game" th:field="*{game}" required>
+                                <option value="" disabled selected>-- Sélectionner un jeu --</option>
+                                <option value="League of Legends">League of Legends</option>
+                                <option value="Valorant">Valorant</option>
+                                <option value="Rocket League">Rocket League</option>
+                                <option value="CS2">Counter-Strike 2</option>
+                                <option value="Super Smash Bros">Super Smash Bros</option>
+                                <select>
+                        </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small text-uppercase fw-bold">Statut</label>
+                            <select class="form-select bg-dark text-white border-secondary" th:field="*{status}">
+                                <option th:each="s : ${T(fr.cytech.pau.hia_jee.model.StatusTournament).values()}"
+                                        th:value="${s}" 
+                                        th:text="${s}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <h4 class="text-warning border-bottom border-secondary pb-2 mb-3 mt-4">
+                            <i class="bi bi-currency-dollar"></i> Sponsors Partenaires
+                        </h4>
                         
-                        <label class="form-check-label text-white" th:for="${'sponsor-' + sponsor.id}">
-                            <span th:text="${sponsor.name}">Nom du Sponsor</span>
-                        </label>
-                    </div>
+                        <div class="p-3 rounded" style="background-color: rgba(255, 255, 255, 0.05);">
+                            
+                            <div th:if="${allSponsors.isEmpty()}" class="alert alert-secondary d-flex align-items-center" role="alert">
+                                <i class="bi bi-exclamation-circle-fill me-2"></i>
+                                <div>
+                                    Aucun sponsor disponible. 
+                                    <a th:href="@{/admin/sponsors/new}" class="alert-link text-warning">En créer un ?</a>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div th:each="sponsor : ${allSponsors}" class="col-md-4 col-sm-6">
+                                    <div class="form-check p-2 border border-secondary rounded hover-effect-check">
+                                        <input class="form-check-input ms-1" 
+                                               type="checkbox" 
+                                               th:value="${sponsor.id}" 
+                                               th:field="*{sponsors}" 
+                                               th:id="${'sponsor-' + sponsor.id}"
+                                               style="cursor: pointer;">
+                                        
+                                        <label class="form-check-label text-white w-100 ps-2" 
+                                               th:for="${'sponsor-' + sponsor.id}"
+                                               style="cursor: pointer;">
+                                            <span th:text="${sponsor.name}">Nom</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-5">
+                            <a th:href="@{/admin/tournaments}" class="btn btn-outline-light px-4">Annuler</a>
+                            <button type="submit" class="btn btn-danger fw-bold px-5">
+                                <i class="bi bi-save"></i> SAUVEGARDER
+                            </button>
+                        </div>
+
+                    </form>
                 </div>
-                <button type="submit" class="btn btn-danger mt-4">Sauvegarder et Continuer</button>
-            </form>
+            </div>
+            
+            <style>
+                .hover-effect-check:hover {
+                    background-color: rgba(220, 53, 69, 0.1); /* Rouge très léger */
+                    border-color: #dc3545 !important;
+                    transition: all 0.2s;
+                }
+                .form-check-input:checked {
+                    background-color: #dc3545;
+                    border-color: #dc3545;
+                }
+            </style>
         </div>
     </div>
 

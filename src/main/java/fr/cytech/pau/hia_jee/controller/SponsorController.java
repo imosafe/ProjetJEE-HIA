@@ -17,7 +17,7 @@ import fr.cytech.pau.hia_jee.service.SponsorService;
 import fr.cytech.pau.hia_jee.repository.SponsorRepository; // <-- Import du Repository pour la recherche
 
 @Controller 
-@RequestMapping("/admin/sponsors") 
+@RequestMapping("/admin/sponsors")
 public class SponsorController {
 
     @Autowired
@@ -27,7 +27,7 @@ public class SponsorController {
     private SponsorRepository sponsorRepository; // <-- On ajoute ça pour la méthode 'search'
 
     // 1. Affiche la liste AVEC Pagination et Recherche
-    @GetMapping 
+    @GetMapping
     public String listSponsors(
             Model model,
             @RequestParam(name = "page", defaultValue = "0") int page,      // Page 0 par défaut

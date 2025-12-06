@@ -1,10 +1,17 @@
 package fr.cytech.pau.hia_jee.controller;
 
+import fr.cytech.pau.hia_jee.model.StatusTournament;
 import fr.cytech.pau.hia_jee.model.Team;
+import fr.cytech.pau.hia_jee.model.Tournament;
 import fr.cytech.pau.hia_jee.model.User;
+import fr.cytech.pau.hia_jee.repository.TournamentRepository;
+import fr.cytech.pau.hia_jee.repository.UserRepository;
 import fr.cytech.pau.hia_jee.service.TeamService;
 import fr.cytech.pau.hia_jee.service.UserService;
 import jakarta.servlet.http.HttpSession;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,6 +27,11 @@ public class TeamController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TournamentRepository tournamentRepository;
+
+    @Autowired
+    private UserRepository userRepository;
     // --- 1. Afficher "Mon Équipe" ---
     @GetMapping("/my")
     public String myTeam(HttpSession session, Model model) {
@@ -30,6 +42,15 @@ public class TeamController {
             // On recharge l'équipe avec les membres (EAGER fetch)
             Team freshTeam = teamService.findTeamWithMembers(sessionUser.getTeam().getId());
             model.addAttribute("team", freshTeam);
+            List<Tournament> compatibleTournaments = tournamentRepository.findByGameAndStatus(
+                    freshTeam.getGame(), 
+                    StatusTournament.OUVERT
+            );
+            
+            // On retire ceux où l'équipe est déjà inscrite
+            compatibleTournaments.removeIf(t -> t.getTeams().contains(freshTeam));
+
+            model.addAttribute("availableTournaments", compatibleTournaments);
             return "teams/my-team";
         } else {
             return "redirect:/teams/new";
@@ -192,5 +213,27 @@ public class TeamController {
             // Si erreur (déjà en équipe, code faux...)
             return "redirect:/teams?error=" + e.getMessage();
         }
+    }
+     // Inscrire l'équipe à un tournoi
+     @PostMapping("/register/{tournamentId}")
+    public String registerTeamToTournament(@PathVariable Long tournamentId, HttpSession session) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) return "redirect:/login";
+
+        // Refresh user
+        User user = userRepository.findById(sessionUser.getId()).orElseThrow();
+        Team team = user.getTeam();
+
+        if (team == null) return "redirect:/teams/new";
+
+        try {
+            // Appel au Service qui contient toute la logique métier
+            teamService.registerTeamToTournament(team.getId(), tournamentId, user);
+        } catch (RuntimeException e) {
+            // Pour faire simple, on log l'erreur console (ou on pourrait passer un param ?error)
+            System.out.println("Erreur inscription tournoi : " + e.getMessage());
+        }
+
+        return "redirect:/teams/my";
     }
 }

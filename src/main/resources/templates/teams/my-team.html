@@ -5,66 +5,73 @@
 
 <div th:fragment="content">
 
-    <div class="p-5 mb-4 bg-dark text-white rounded-3 shadow position-relative overflow-hidden border border-secondary">
-        <div class="d-flex align-items-center flex-wrap gap-3">
-            <!-- Correction ici : Utilisation de team.name.substring(0,1) au lieu de #strings -->
-            <img th:src="${team.logoUrl != null && !team.logoUrl.isEmpty() ? team.logoUrl : 'https://placehold.co/150x150/333/FFF?text=' + team.name.substring(0,1)}"
-                 alt="Logo" class="rounded-circle border border-4 border-danger shadow"
-                 style="width: 120px; height: 120px; object-fit: cover;">
+    <div class="p-5 mb-4 bg-dark text-white rounded-3 shadow position-relative overflow-hidden border border-secondary"
+         style="background: linear-gradient(135deg, #212529 0%, #343a40 100%);">
+        
+        <div class="d-flex align-items-center flex-wrap gap-4">
+            <div class="position-relative">
+                <img th:src="${team.logoUrl != null && !team.logoUrl.isEmpty() ? team.logoUrl : 'https://placehold.co/150x150/333/FFF?text=' + team.name.substring(0,1)}"
+                     alt="Logo" class="rounded-circle border border-4 border-danger shadow"
+                     style="width: 120px; height: 120px; object-fit: cover;">
+                <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-danger border border-dark">
+                    <span th:text="${team.game}">JEU</span>
+                </span>
+            </div>
 
             <div>
-                <h1 class="display-4 fw-bold text-uppercase" th:text="${team.name}">Nom Équipe</h1>
-                <span class="badge bg-danger fs-5 rounded-pill" th:text="${team.game}">Jeu</span>
-                <p class="lead mt-2 mb-0 text-white-50">Effectif : <span th:text="${team.members != null ? team.members.size() : 0}">0</span> joueurs</p>
-                <p class="small mt-2" th:if="${team.leader != null}">
-                    Capitaine : <span class="text-warning fw-bold" th:text="${team.leader.username}">CHEF</span>
-                </p>
+                <h1 class="display-4 fw-bold text-uppercase mb-0" th:text="${team.name}">Nom Équipe</h1>
+                <div class="d-flex align-items-center gap-3 mt-2 text-white-50">
+                    <span><i class="bi bi-people-fill"></i> <span th:text="${team.members != null ? team.members.size() : 0}">0</span> Membres</span>
+                    <span>|</span>
+                    <span th:if="${team.leader != null}">
+                        <i class="bi bi-star-fill text-warning"></i> Cap. <span class="text-white fw-bold" th:text="${team.leader.username}">CHEF</span>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
+        
         <div class="col-lg-8">
             <div class="card shadow border-0 h-100">
                 <div class="card-header bg-white py-3 border-bottom border-danger border-2">
-                    <h4 class="mb-0 text-dark fw-bold text-uppercase"><i class="bi bi-people-fill text-danger"></i> Roster</h4>
+                    <h4 class="mb-0 text-dark fw-bold text-uppercase"><i class="bi bi-people-fill text-danger"></i> Effectif</h4>
                 </div>
                 <div class="list-group list-group-flush">
 
                     <div th:each="member : ${team.members}" class="list-group-item d-flex justify-content-between align-items-center py-3">
 
                         <div class="d-flex align-items-center">
-                            <i class="bi bi-person-circle fs-3 text-secondary me-3"></i>
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3 text-secondary border" style="width: 45px; height: 45px;">
+                                <i class="bi bi-person-fill fs-4"></i>
+                            </div>
                             <div>
-                                <h5 class="mb-0 fw-bold" th:text="${member.username}">Pseudo</h5>
+                                <h5 class="mb-0 fw-bold text-dark" th:text="${member.username}">Pseudo</h5>
                                 <small class="text-uppercase text-muted" th:text="${member.role != null ? member.role : 'Membre'}">ROLE</small>
                             </div>
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
-
-                            <span th:if="${team.leader != null and team.leader.id == member.id}" class="badge bg-warning text-dark">
-                                <i class="bi bi-star-fill"></i> CHEF
+                            <span th:if="${team.leader != null and team.leader.id == member.id}" class="badge bg-warning text-dark border border-dark">
+                                <i class="bi bi-star-fill"></i> CAPITAINE
                             </span>
 
                             <span th:if="${session.user != null and member.username == session.user.username}"
                                   class="badge bg-success-subtle text-success border border-success">
-                                <i class="bi bi-person-check-fill"></i> VOUS
+                                <i class="bi bi-person-check-fill"></i> MOI
                             </span>
 
                             <form th:if="${team.leader != null and team.leader.id == session.user.id and member.id != session.user.id}"
                                   th:action="@{/teams/kick/{id}(id=${member.id})}" method="post"
                                   onsubmit="return confirm('Êtes-vous sûr de vouloir exclure ce joueur ?');">
-
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Exclure ce joueur">
                                     <i class="bi bi-person-x-fill"></i>
                                 </button>
                             </form>
-
                         </div>
                     </div>
 
-                    <!-- CORRECTION ICI : Utilisation de #lists.isEmpty() qui est plus robuste -->
                     <div th:if="${#lists.isEmpty(team.members)}" class="p-4 text-center text-muted">
                         Aucun membre pour l'instant.
                     </div>
@@ -73,23 +80,18 @@
         </div>
 
         <div class="col-lg-4">
+            
             <div class="card shadow border-0 mb-4">
                 <div class="card-body">
-                    <h5 class="card-title fw-bold text-uppercase mb-3">Gestion d'équipe</h5>
+                    <h5 class="card-title fw-bold text-uppercase mb-3 text-secondary">
+                        <i class="bi bi-gear-fill"></i> Administration
+                    </h5>
 
-                    <!-- Protection : On affiche le bouton seulement si le code existe -->
                     <div th:if="${team.inviteCode != null}">
                         <input type="hidden" id="invitePath" th:value="@{/teams/invite/{code}(code=${team.inviteCode})}">
-
-                        <button type="button" class="btn btn-outline-dark w-100 mb-2" onclick="copyInviteLink()">
-                            <i class="bi bi-share"></i> Inviter des joueurs
+                        <button type="button" class="btn btn-dark w-100 mb-2" onclick="copyInviteLink()">
+                            <i class="bi bi-link-45deg"></i> Copier lien d'invitation
                         </button>
-                    </div>
-
-                    <!-- Message d'avertissement pour les vieilles équipes sans code -->
-                    <div th:if="${team.inviteCode == null}" class="alert alert-warning small p-2 text-center">
-                        <i class="bi bi-exclamation-triangle-fill"></i> Code d'invitation manquant.<br>
-                        <strong>Veuillez dissoudre et recréer l'équipe.</strong>
                     </div>
 
                     <form th:unless="${team.leader != null and team.leader.id == session.user.id}"
@@ -100,59 +102,109 @@
                         </button>
                     </form>
 
-                    <div th:if="${team.leader != null and team.leader.id == session.user.id}" class="mt-4 border-top pt-3">
-                        <p class="text-danger small fw-bold mb-2 text-center"><i class="bi bi-exclamation-triangle-fill"></i> ZONE DANGEREUSE</p>
-
+                    <div th:if="${team.leader != null and team.leader.id == session.user.id}" class="mt-3 pt-3 border-top">
                         <form th:action="@{/teams/dissolve}" method="post"
-                              onsubmit="return confirm('ATTENTION : Vous allez supprimer définitivement l\'équipe.\n\n- Tous les membres seront exclus.\n- Cette action est irréversible.\n\nÊtes-vous sûr ?');">
+                              onsubmit="return confirm('ATTENTION : Irréversible. Tous les membres seront exclus. Continuer ?');">
                             <button type="submit" class="btn btn-danger w-100 fw-bold">
                                 <i class="bi bi-trash3-fill"></i> DISSOUDRE L'ÉQUIPE
                             </button>
                         </form>
                     </div>
-
                 </div>
             </div>
 
-            <div class="card shadow border-0">
-                <div class="card-header bg-secondary text-white fw-bold">
-                    <i class="bi bi-trophy"></i> Tournois Inscrits
+            <div class="card shadow border-0 border-top border-warning border-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-uppercase">
+                        <i class="bi bi-trophy-fill text-warning"></i> Compétitions
+                    </h5>
                 </div>
-                <div class="card-body text-center text-muted py-4">
-                    <p class="mb-3">Aucun tournoi en cours.</p>
-                    <a th:href="@{/tournaments}" class="btn btn-danger btn-sm text-uppercase fw-bold">Voir le catalogue</a>
+                
+                <div class="card-body p-0">
+                    
+                    <div th:if="${team.tournaments != null and !team.tournaments.isEmpty()}" class="p-3 border-bottom bg-light">
+                        <h6 class="text-success fw-bold small text-uppercase mb-3">
+                            <i class="bi bi-check-circle-fill"></i> Déjà Inscrits
+                        </h6>
+                        <ul class="list-group list-group-flush border rounded-2">
+                            <li th:each="t : ${team.tournaments}" class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold d-block" th:text="${t.name}">Nom Tournoi</span>
+                                    <small class="text-muted" th:text="${t.status}">STATUT</small>
+                                </div>
+                                <a th:href="@{/tournaments/tree/{id}(id=${t.id})}" class="btn btn-sm btn-outline-dark">
+                                    <i class="bi bi-diagram-3"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="p-3">
+                        <h6 class="text-primary fw-bold small text-uppercase mb-3">
+                            <i class="bi bi-calendar-plus"></i> Ouverts : <span th:text="${team.game}">Jeu</span>
+                        </h6>
+
+                        <div th:if="${availableTournaments != null and !availableTournaments.isEmpty()}">
+                            <div th:each="t : ${availableTournaments}" class="card mb-2 border-secondary shadow-sm">
+                                <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold small text-dark" th:text="${t.name}">Tournoi</div>
+                                        <div class="text-success small fw-bold">
+                                            <i class="bi bi-cash-coin"></i> 
+                                            <span th:text="${t.cashPrize != null ? t.cashPrize + '€' : 'Honorifique'}"></span>
+                                        </div>
+                                    </div>
+
+                                    <form th:if="${team.leader.id == session.user.id}" 
+                                          th:action="@{/teams/register/{id}(id=${t.id})}" method="post">
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold text-uppercase" style="font-size: 0.75rem;">
+                                            S'inscrire
+                                        </button>
+                                    </form>
+                                    
+                                    <span th:if="${team.leader.id != session.user.id}" class="badge bg-secondary text-white-50" style="font-size: 0.65rem;">
+                                        Chef requis
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${availableTournaments == null or availableTournaments.isEmpty()}" class="text-center text-muted py-3 small bg-light rounded border border-dashed">
+                            Aucun tournoi <em><span th:text="${team.game}"></span></em> ouvert aux inscriptions.
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer text-center bg-white">
+                        <a th:href="@{/tournaments}" class="btn btn-link btn-sm text-decoration-none text-danger fw-bold">
+                            Voir tout le catalogue
+                        </a>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <!-- SCRIPT JS DÉPLACÉ À L'INTÉRIEUR DU FRAGMENT -->
     <script>
         function copyInviteLink() {
             var inviteInput = document.getElementById("invitePath");
-            if (!inviteInput) return; // Sécurité si le bouton est caché
+            if (!inviteInput) return;
 
-            // 1. On récupère le chemin relatif (/teams/invite/xyz...)
             var path = inviteInput.value;
-
-            // 2. On reconstruit l'URL complète avec le domaine actuel (localhost:8080)
             var fullUrl = window.location.origin + path;
 
-            // 3. On copie
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(fullUrl).then(function() {
-                    alert("Lien copié ! Partagez-le :\n" + fullUrl);
+                    alert("✅ Lien copié !\nEnvoyez-le à vos amis :\n\n" + fullUrl);
                 }, function() {
-                    alert("Erreur de copie. Voici le lien :\n" + fullUrl);
+                    prompt("Copiez ce lien manuellement :", fullUrl);
                 });
             } else {
-                // Fallback pour anciens navigateurs ou contextes non sécurisés
-                alert("Copiez ce lien manuellement :\n" + fullUrl);
+                prompt("Copiez ce lien manuellement :", fullUrl);
             }
         }
     </script>
 </div>
-<!-- Fin du fragment content -->
 
 </body>
 </html>

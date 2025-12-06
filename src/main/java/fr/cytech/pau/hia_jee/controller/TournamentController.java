@@ -1,6 +1,5 @@
 package fr.cytech.pau.hia_jee.controller;
 
-import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,7 +26,6 @@ public class TournamentController {
     private final TournamentRepository tRepo;
     private final MatchRepository mRepo;
     private final TournamentService tService;
-    
     private final SponsorService sponsorService;
 
     public TournamentController(TournamentRepository tRepo, MatchRepository mRepo, TournamentService tService, SponsorService sponsorService) {
@@ -37,46 +35,37 @@ public class TournamentController {
         this.sponsorService = sponsorService;
     }
 
-    // --- 1. LISTE DES TOURNOIS ---
-    @GetMapping
-    public String index(Model model, @RequestParam(required = false) String game) {
-        List<Tournament> tournaments = tService.findAll(); 
-        model.addAttribute("tournaments", tournaments);
-        return "tournament_index";
-    }
-
-    // --- 2. VUE DÉTAILLÉE (CORRECTION ICI) ---
-    // On ajoute :[0-9]+ pour dire "Chiffres seulement". 
-    // Cela empêche le conflit avec "/new".
-    @GetMapping("/{id:[0-9]+}") 
-    public String view(@PathVariable Long id, Model model) {
-        Tournament tournament = tRepo.findById(id)
-            .orElseThrow(() -> new RuntimeException("Tournoi introuvable"));
-        model.addAttribute("tournament", tournament);
-        // model.addAttribute("matches", tournament.getMatches()); 
-        return "tournament_view";
-    }
-
-    // --- 3. FORMULAIRE DE CRÉATION ---
+    // --- 1. FORMULAIRE DE CRÉATION ---
     @GetMapping("/new")
     public String showTournamentForm(Model model) {
         model.addAttribute("tournament", new Tournament());
         model.addAttribute("allSponsors", sponsorService.findAll());
         return "admin/tournaments/form"; 
     }
-
-    // --- 4. SAUVEGARDE DU TOURNOI ---
+    // --- 2. FORMULAIRE DE MODIFICATION ---
+    @GetMapping("/modif/{id}")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        Tournament tournament = tRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("Tournoi introuvable"));
+        
+        model.addAttribute("tournament", tournament);
+        model.addAttribute("allSponsors", sponsorService.findAll());
+        
+        // On réutilise le même formulaire HTML
+        return "admin/tournaments/form"; 
+    }
+    // --- 3. SAUVEGARDE DU TOURNOI ---
     @PostMapping
     public String saveTournament(@ModelAttribute Tournament tournament) {
         tService.save(tournament); 
-        return "redirect:/admin/tournaments"; 
+        return "redirect:/tournaments"; 
     }
 
     // --- 5. LOGIQUE BRACKET ---
     @PostMapping("/{id}/generate")
     public String generateBracket(@PathVariable Long id) {
         tService.generateBracket(id);
-        return "redirect:/admin/tournaments/" + id; 
+        return "redirect:/tournaments/tree/" + id; 
     }
 
     @PostMapping("/match/{matchId}/score")
@@ -86,6 +75,6 @@ public class TournamentController {
         tService.enterScore(matchId, scoreA, scoreB);
         Match match = mRepo.findById(matchId).orElseThrow();
         Long tournamentId = match.getTournament().getId();
-        return "redirect:/admin/tournaments/" + tournamentId; 
+        return "redirect:/tournaments/tree/" + tournamentId; 
     }
 }

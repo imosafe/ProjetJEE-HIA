@@ -3,6 +3,7 @@ package fr.cytech.pau.hia_jee.model;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -21,8 +22,7 @@ import lombok.Data;
 @Table(name="tournaments")
 public class Tournament {
     
-    public enum StatusTournament{OUVERT,EN_COURS,TERMINE};
-    @Id
+   @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
     @OneToMany(mappedBy="tournament",cascade=CascadeType.ALL)
@@ -43,10 +43,15 @@ public class Tournament {
     private List<Team> teams;
      @Enumerated(EnumType.STRING)
     private StatusTournament status;
-    private double cashPrize;
+    @Column(nullable = false)
+    private String game;
 
-    public double getCashPrize() {
-        return cashPrize;
+    ///getters and setters
+    public String getGame(){
+        return game;
+    }
+    public void setGame(String game){
+        this.game=game;
     }
 
     public List<Match> getMatches() {
@@ -67,10 +72,6 @@ public class Tournament {
 
     public StatusTournament getStatus() {
         return status;
-    }
-
-    public void setCashPrize(double cashPrize) {
-        this.cashPrize = cashPrize;
     }
 
     public void setId(Long id) {

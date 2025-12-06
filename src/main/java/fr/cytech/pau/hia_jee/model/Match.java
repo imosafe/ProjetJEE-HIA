@@ -22,16 +22,18 @@ public class Match {
     @ManyToOne
     @JoinColumn(name="tournament_id")
     private Tournament tournament;
-    private double cashPrize;
+    private int round;
     private int scoreA;
     private int scoreB;
     @ManyToOne
     private Team winner;
-
-    public double getCashPrize() {
-        return cashPrize;
+    //getters and setters
+    public int getRound() { 
+        return round; 
     }
-
+    public void setRound(int round) { 
+        this.round = round; 
+    }
     public Long getId() {
         return id;
     }
@@ -62,10 +64,6 @@ public class Match {
 
     public Tournament getTournament() {
         return tournament;
-    }
-
-    public void setCashPrize(double cashPrize) {
-        this.cashPrize = cashPrize;
     }
 
     public void setId(Long id) {
