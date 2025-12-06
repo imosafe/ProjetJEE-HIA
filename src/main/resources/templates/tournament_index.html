@@ -1,40 +1,70 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-th:replace="~{fragments/layout :: layout('Catalogue des Tournois', ~{::#main-content})}"><head>
+      th:replace="~{fragments/layout :: layout('Catalogue des Tournois', ~{::#main-content})}">
+<head>
     <title>Catalogue des Tournois</title>
 </head>
 <body>
 
     <div id="main-content">
         <div class="container mt-5">
-            <h1 class="text-danger mb-4">🏆 Catalogue des Tournois</h1>
             
-            <div class="mb-4" th:if="${session.user != null and session.user.role.name() == 'ADMIN'}" >
-                <a th:href="@{/admin/tournaments/new}" class="btn btn-warning">
-                    <i class="fas fa-plus"></i> Créer un Tournoi 
-                </a>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="text-danger fw-bold">
+                    <i class="bi bi-trophy-fill"></i> Catalogue des Tournois
+                </h1>
+                
+                <div th:if="${session.user != null and session.user.role.name() == 'ADMIN'}">
+                    <a th:href="@{/admin/tournaments/new}" class="btn btn-warning fw-bold shadow">
+                        <i class="bi bi-plus-lg"></i> Créer un Tournoi 
+                    </a>
+                </div>
             </div>
             
             <div class="row">
                 <div th:each="tournament : ${tournaments}" class="col-md-4 mb-4">
-                    <div class="card bg-dark text-white border-danger">
-                        <div class="card-body">
-                            <h5 class="card-title text-danger" th:text="${tournament.name}">Nom du Tournoi</h5>
-                            <p class="card-text">Statut : <span class="badge bg-secondary">À venir</span></p>
-                            <a href="#" class="btn btn-outline-light btn-sm">Voir Détails</a>
+                    <div class="card bg-dark text-white border-danger shadow h-100 hover-effect-card">
+                        <div class="card-body d-flex flex-column">
                             
-                            <a th:href= "${isAdmin} ? @{/admin/tournaments} : @{/tournaments}" class="btn btn-outline-light btn-sm">Générer l'arbre du touroi</a>
+                            <h5 class="card-title text-danger fw-bold" th:text="${tournament.name}">
+                                Nom du Tournoi
+                            </h5>
+                            
+                            <p class="card-text text-white-50">
+                                Jeu : <span class="text-white" th:text="${tournament.game}">Jeu</span><br>
+                                Statut : <span class="fs-4 fw-bold" th:text="${tournament.status != null ? tournament.status : 'Non défini'}"></span>
+                            </p>
+                            
+                            <div class="mt-auto d-grid gap-2">
+                                
+                                <a th:href="@{/tournaments/view/{id}(id=${tournament.id})}" 
+                                   class="btn btn-outline-light btn-sm">
+                                    <i class="bi bi-eye"></i> Voir Détails
+                                </a>
+                                
+                                <a th:href="@{/tournaments/tree/{id}(id=${tournament.id})}" 
+                                   class="btn btn-danger btn-sm fw-bold">
+                                    <i class="bi bi-diagram-3-fill"></i> Voir l'Arbre
+                                </a>
+                            </div>
+
                         </div>
                     </div>
                 </div>
                 
                 <div th:if="${#lists.isEmpty(tournaments)}" class="col-12">
-                    <div class="alert alert-secondary text-center">
+                    <div class="alert alert-secondary text-center py-5">
+                        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                         Aucun tournoi n'est disponible pour le moment.
                     </div>
                 </div>
             </div>
         </div>
+        
+        <style>
+            .hover-effect-card { transition: transform 0.2s; }
+            .hover-effect-card:hover { transform: translateY(-5px); border-color: #ffc107 !important; }
+        </style>
     </div>
 
 </body>

@@ -21,8 +21,7 @@ import lombok.Data;
 @Table(name="tournaments")
 public class Tournament {
     
-    public enum StatusTournament{OUVERT,EN_COURS,TERMINE};
-    @Id
+   @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
     @OneToMany(mappedBy="tournament",cascade=CascadeType.ALL)
@@ -43,10 +42,15 @@ public class Tournament {
     private List<Team> teams;
      @Enumerated(EnumType.STRING)
     private StatusTournament status;
-    private double cashPrize;
+     @Enumerated(EnumType.STRING)
+    private Game game;
 
-    public double getCashPrize() {
-        return cashPrize;
+    ///getters and setters
+    public Game getGame(){
+        return game;
+    }
+    public void setGame(Game game){
+        this.game=game;
     }
 
     public List<Match> getMatches() {
@@ -67,10 +71,6 @@ public class Tournament {
 
     public StatusTournament getStatus() {
         return status;
-    }
-
-    public void setCashPrize(double cashPrize) {
-        this.cashPrize = cashPrize;
     }
 
     public void setId(Long id) {

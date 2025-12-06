@@ -15,7 +15,6 @@ public class AdminInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 1. Récupérer la session
         HttpSession session = request.getSession(false); // false = ne pas créer de nouvelle session
-
         // 2. Vérifier si la session existe et récupérer l'utilisateur
         if (session == null) {
             System.out.println("❌ [AdminInterceptor] Pas de session !");

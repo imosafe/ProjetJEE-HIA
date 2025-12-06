@@ -3,49 +3,63 @@ package fr.cytech.pau.hia_jee.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import fr.cytech.pau.hia_jee.model.StatusTournament;
 import fr.cytech.pau.hia_jee.model.Team;
+import fr.cytech.pau.hia_jee.model.Tournament;
 import fr.cytech.pau.hia_jee.model.User;
+import fr.cytech.pau.hia_jee.repository.TournamentRepository;
+import fr.cytech.pau.hia_jee.repository.UserRepository;
 import fr.cytech.pau.hia_jee.service.TeamService;
 import fr.cytech.pau.hia_jee.service.UserService;
 import jakarta.servlet.http.HttpSession;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/teams")
 public class TeamController {
 
-    @Autowired
-    private TeamService teamService;
+    @Autowired private TeamService teamService;
+    @Autowired private UserService userService;
+    @Autowired private UserRepository userRepository;
+    @Autowired private TournamentRepository tournamentRepository;
 
-    @Autowired
-    private UserService userService;
+    // --- 1. LISTE ET PROFIL PUBLIC ---
 
-    // --- 1. AFFICHER LE PROFIL D'UNE ÉQUIPE (PUBLIC) ---
-    // C'est la méthode la plus importante pour ta demande !
+    @GetMapping("")
+    public String listTeams(Model model) {
+        model.addAttribute("teams", teamService.findAllTeams());
+        return "teams/list";
+    }
+
     @GetMapping("/{id}")
     public String showTeamProfile(@PathVariable Long id, Model model, HttpSession session) {
         Team team = teamService.findTeamWithMembers(id);
         if (team == null) return "redirect:/teams";
 
-        User currentUser = (User) session.getAttribute("user");
+        User sessionUser = (User) session.getAttribute("user");
         
         boolean isMember = false;
         boolean canJoin = false;
         boolean isLeader = false;
 
-        if (currentUser != null) {
-            if (currentUser.getTeam() != null && currentUser.getTeam().getId().equals(team.getId())) {
-                isMember = true;
-                if (team.getLeader() != null && team.getLeader().getId().equals(currentUser.getId())) {
-                    isLeader = true;
+        if (sessionUser != null) {
+            // On rafraichit l'user depuis la BDD pour être sûr de son état actuel
+            User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
+            
+            if (dbUser != null) {
+                if (dbUser.getTeam() != null && dbUser.getTeam().getId().equals(team.getId())) {
+                    isMember = true;
+                    if (team.getLeader() != null && team.getLeader().getId().equals(dbUser.getId())) {
+                        isLeader = true;
+                    }
+                } else if (dbUser.getTeam() == null) {
+                    canJoin = true;
                 }
-            } else if (currentUser.getTeam() == null) {
-                canJoin = true;
             }
         }
 
@@ -57,123 +71,182 @@ public class TeamController {
         return "teams/profile"; 
     }
 
-    // --- 2. REDIRECTION INTELLIGENTE "MON ÉQUIPE" ---
+    // --- 2. TABLEAU DE BORD "MON ÉQUIPE" ---
+
     @GetMapping("/my")
-    public String myTeamRedirect(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user != null && user.getTeam() != null) {
-            return "redirect:/teams/" + user.getTeam().getId();
-        }
-        return "redirect:/teams/new"; 
-    }
+    public String myTeam(HttpSession session, Model model) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) return "redirect:/login";
 
-    // --- 3. CATALOGUE ---
-    @GetMapping({"", "/"})
-    public String listTeams(Model model) {
-        model.addAttribute("teams", teamService.findAllTeams());
-        return "teams/list";
-    }
-
-    // --- 4. REJOINDRE ---
-    @PostMapping("/{id}/join")
-    public String joinTeam(@PathVariable Long id, HttpSession session) {
-        User user = (User) session.getAttribute("user");
+        // Récupération fraîche depuis la BDD
+        User user = userRepository.findById(sessionUser.getId()).orElse(null);
         if (user == null) return "redirect:/login";
 
-        try {
-            userService.joinTeam(user.getId(), id);
-            
-            Team joinedTeam = teamService.findTeamWithMembers(id);
-            user.setTeam(joinedTeam);
-            session.setAttribute("user", user);
+        // Si l'utilisateur n'a pas d'équipe, on le redirige vers la création
+        if (user.getTeam() == null) return "redirect:/teams/new";
 
-            return "redirect:/teams/" + id + "?success=Bienvenue !";
-        } catch (RuntimeException e) {
-            return "redirect:/teams/" + id + "?error=" + e.getMessage();
+        Team team = teamService.findTeamWithMembers(user.getTeam().getId());
+        model.addAttribute("team", team);
+
+        // --- FILTRAGE DES TOURNOIS DISPONIBLES ---
+        List<Tournament> allUpcoming = tournamentRepository.findByStatus(StatusTournament.OUVERT);
+        List<Tournament> compatibleTournaments = new ArrayList<>();
+
+        for (Tournament t : allUpcoming) {
+            // Compatible si : Même jeu ET l'équipe n'est pas déjà inscrite
+            boolean sameGame = (t.getGame() == team.getGame());
+            boolean notRegistered = !t.getTeams().contains(team);
+
+            if (sameGame && notRegistered) {
+                compatibleTournaments.add(t);
+            }
         }
+
+        model.addAttribute("availableTournaments", compatibleTournaments);
+        return "teams/my-team";
     }
 
-    // --- 5. QUITTER ---
-    @PostMapping("/leave")
-    public String leaveTeam(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user != null && user.getTeam() != null) {
-            Long oldTeamId = user.getTeam().getId();
-            userService.leaveTeam(user.getId());
-            
-            user.setTeam(null);
-            session.setAttribute("user", user);
-            
-            return "redirect:/teams/" + oldTeamId + "?success=Vous avez quitté l'équipe.";
-        }
-        return "redirect:/";
-    }
+    // --- 3. CRÉATION D'ÉQUIPE ---
 
-    // --- 6. CRÉATION ---
     @GetMapping("/new")
-    public String showCreateForm(Model model) {
+    public String showCreateForm(HttpSession session, Model model) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) return "redirect:/login";
+        
+        User dbUser = userRepository.findById(sessionUser.getId()).orElseThrow();
+        if (dbUser.getTeam() != null) return "redirect:/teams/my";
+
         model.addAttribute("team", new Team());
         return "teams/create";
     }
 
     @PostMapping("/new")
-    public String processCreate(@ModelAttribute Team team, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+    public String processCreate(@ModelAttribute Team team, HttpSession session, Model model) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) return "redirect:/login";
 
-        Team savedTeam = teamService.createTeam(team, user);
-        userService.joinTeam(user.getId(), savedTeam.getId());
-        
-        user.setTeam(savedTeam);
-        session.setAttribute("user", user);
-
-        return "redirect:/teams/" + savedTeam.getId();
+        try {
+            Team savedTeam = teamService.createTeam(team, sessionUser);
+            
+            // Mise à jour de la session
+            sessionUser.setTeam(savedTeam);
+            session.setAttribute("user", sessionUser);
+            
+            return "redirect:/teams/my";
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            return "teams/create";
+        }
     }
 
-    // --- 7. DISSOUDRE ---
+    // --- 4. ACTIONS (Rejoindre, Quitter, Inscription Tournoi) ---
+
+    @PostMapping("/{id}/join")
+    public String joinTeam(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) return "redirect:/login";
+
+        User user = userRepository.findById(sessionUser.getId()).orElse(null);
+        if (user == null || user.getTeam() != null) {
+            redirectAttributes.addFlashAttribute("error", "Impossible de rejoindre l'équipe.");
+            return "redirect:/teams/my";
+        }
+
+        Team teamToJoin = teamService.findById(id);
+        if (teamToJoin != null) {
+            user.setTeam(teamToJoin);
+            userRepository.save(user); // Sauvegarde BDD
+            
+            // Mise à jour session pour affichage immédiat
+            sessionUser.setTeam(teamToJoin);
+            session.setAttribute("user", sessionUser);
+            
+            redirectAttributes.addFlashAttribute("success", "Bienvenue dans l'équipe " + teamToJoin.getName());
+        }
+
+        return "redirect:/teams/my";
+    }
+
+    @PostMapping("/register/{tournamentId}")
+    public String registerToTournament(@PathVariable Long tournamentId, HttpSession session, RedirectAttributes redirectAttributes) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) return "redirect:/login";
+
+        User user = userRepository.findById(sessionUser.getId()).orElse(null);
+        if (user == null || user.getTeam() == null) return "redirect:/teams/new";
+
+        try {
+            teamService.registerTeamToTournament(user.getTeam().getId(), tournamentId, user);
+            redirectAttributes.addFlashAttribute("success", "Inscription au tournoi réussie !");
+        } catch (RuntimeException e) {
+            // Utilisation de FlashAttribute pour afficher l'erreur après la redirection
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+        }
+        return "redirect:/teams/my";
+    }
+
+    @PostMapping("/leave")
+    public String leaveTeam(HttpSession session) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser != null) {
+            userService.leaveTeam(sessionUser.getId());
+            
+            // Mise à jour session
+            sessionUser.setTeam(null);
+            session.setAttribute("user", sessionUser);
+        }
+        return "redirect:/teams"; // Rediriger vers la liste des équipes plutôt que l'accueil
+    }
+
     @PostMapping("/dissolve")
     public String dissolveTeam(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user != null && user.getTeam() != null) {
-            teamService.dissolveTeam(user.getTeam().getId());
-            user.setTeam(null);
-            session.setAttribute("user", user);
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) return "redirect:/login";
+        
+        // Vérification stricte en BDD
+        User dbUser = userRepository.findById(sessionUser.getId()).orElseThrow();
+        
+        if (dbUser.getTeam() != null && dbUser.getTeam().getLeader().getId().equals(dbUser.getId())) {
+            teamService.dissolveTeam(dbUser.getTeam().getId());
+            
+            sessionUser.setTeam(null);
+            session.setAttribute("user", sessionUser);
         }
         return "redirect:/teams";
     }
 
-    // --- 8. EXCLURE (KICK) ---
     @PostMapping("/kick/{memberId}")
-    public String kickMember(@PathVariable Long memberId, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        
-        if(user == null || user.getTeam() == null) return "redirect:/login";
-
-        try {
-            userService.kickMember(user.getId(), memberId);
-            return "redirect:/teams/" + user.getTeam().getId() + "?success=Joueur exclu.";
-        } catch (RuntimeException e) {
-            return "redirect:/teams/" + user.getTeam().getId() + "?error=" + e.getMessage();
+    public String kickMember(@PathVariable Long memberId, HttpSession session, RedirectAttributes redirectAttributes) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser != null) {
+            try { 
+                userService.kickMember(sessionUser.getId(), memberId);
+                redirectAttributes.addFlashAttribute("success", "Membre exclu.");
+            } catch (Exception e) {
+                redirectAttributes.addFlashAttribute("error", e.getMessage());
+            }
         }
+        return "redirect:/teams/my";
     }
 
-    // --- 9. INVITATION ---
     @GetMapping("/invite/{code}")
-    public String joinByInvite(@PathVariable String code, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
-
+    public String joinByInvite(@PathVariable String code, HttpSession session, RedirectAttributes redirectAttributes) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) return "redirect:/login";
+        
         try {
-            // 2. Le service fait le lien User <-> Team
-            userService.joinTeamByInviteCode(user.getId(), code);
-            Team joinedTeam = teamService.findByInviteCode(code);
+            userService.joinTeamByInviteCode(sessionUser.getId(), code);
             
-            user.setTeam(joinedTeam);
-            session.setAttribute("user", user);
-
-            return "redirect:/teams/" + joinedTeam.getId() + "?success=Bienvenue !";
+            // Mise à jour session pour refléter le changement immédiat
+            Team t = teamService.findByInviteCode(code);
+            sessionUser.setTeam(t);
+            session.setAttribute("user", sessionUser);
+            
+            redirectAttributes.addFlashAttribute("success", "Vous avez rejoint l'équipe via invitation !");
+            return "redirect:/teams/my";
         } catch (RuntimeException e) {
-            return "redirect:/teams?error=" + e.getMessage();
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/teams";
         }
     }
 }

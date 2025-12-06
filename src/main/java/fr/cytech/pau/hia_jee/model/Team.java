@@ -7,9 +7,12 @@ import java.util.UUID;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -31,11 +34,14 @@ public class Team {
     private String inviteCode;
 
     // --- C'EST CE CHAMP QUI MANQUE ---
-    @Column(nullable = false)
-    private String game; // "League of Legends", "Valorant", etc.
+    @Enumerated(EnumType.STRING)
+    private Game game; // "League of Legends", "Valorant", etc.
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<User> members = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "teams") // "teams" doit correspondre au nom de la liste dans Tournament.java
+    private List<Tournament> tournaments = new ArrayList<>();
 
     @OneToOne
     private User leader;
@@ -56,8 +62,8 @@ public class Team {
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
 
     // --- ET SURTOUT CE GETTER ---
-    public String getGame() { return game; }
-    public void setGame(String game) { this.game = game; }
+    public Game getGame() { return game; }
+    public void setGame(Game game) { this.game = game; }
 
     public List<User> getMembers() { return members; }
     public void setMembers(List<User> members) { this.members = members; }
@@ -67,4 +73,11 @@ public class Team {
 
     public String getInviteCode() { return inviteCode; }
     public void setInviteCode(String inviteCode) { this.inviteCode = inviteCode; }
+    public List<Tournament> getTournaments() {
+        return tournaments;
+    }
+
+    public void setTournaments(List<Tournament> tournaments) {
+        this.tournaments = tournaments;
+    }
 }

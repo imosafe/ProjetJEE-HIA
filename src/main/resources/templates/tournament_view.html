@@ -1,33 +1,74 @@
 <!DOCTYPE html>
-
 <html xmlns:th="http://www.thymeleaf.org"
-th:replace="~{fragments/layout :: layout('Catalogue des Tournois', ~{::#main-content})}"><head>
-    <title>Catalogue des Tournois</title>
-    
+      th:replace="~{fragments/layout :: layout('Détails du Tournoi', ~{::#main-content})}">
 <head>
-    <meta charset="UTF-8">
-    <title>Tournoi - Détail</title>
+    <title>Détails du Tournoi</title>
 </head>
 <body>
-    <h1 th:text="${tournament.name}">Nom du tournoi</h1>
 
-    <p>Statut : <span th:text="${tournament.status}">STATUT</span></p>
+    <div id="main-content">
+        
+        <div class="container mt-5">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="text-danger fw-bold">
+                    <i class="bi bi-info-circle-fill"></i> <span th:text="${tournament.name}">Nom du Tournoi</span>
+                </h1>
+                
+                <div class="btn-group">
+                    <a th:href="@{/tournaments}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </a>
 
-    <h2>Équipes</h2>
-    <ul>
-        <li th:each="team : ${tournament.teams}" th:text="${team.name}">Équipe</li>
-    </ul>
+                    <a th:if="${session.user != null and session.user.role.name() == 'ADMIN'}"
+                       th:href="@{/admin/tournaments/modif/{id}(id=${tournament.id})}" 
+                       class="btn btn-warning fw-bold text-dark">
+                        <i class="bi bi-pencil-square"></i> Modifier
+                    </a>
+                </div>
+            </div>
 
-    <h2>Matches</h2>
-    <ul>
-        <li th:each="m : ${tournament.matches}">
-            <span th:text="${m.teamA != null ? m.teamA.name : 'TBD'}"></span>
-            vs
-            <span th:text="${m.teamB != null ? m.teamB.name : 'TBD'}"></span>
-            &nbsp;(<span th:text="${m.scoreA}">0</span>-<span th:text="${m.scoreB}">0</span>)
-        </li>
-    </ul>
+            <div class="card bg-dark text-white border-danger shadow mb-4">
+                <div class="card-header border-secondary text-uppercase fw-bold text-warning">
+                    Informations Générales
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h5 class="text-secondary">Jeu</h5>
+                            <p class="fs-4 fw-bold" th:text="${tournament.game != null ? tournament.game : 'Non défini'}">Jeu</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h5 class="text-secondary">Statut</h5>
+                            <p class="fs-4 fw-bold" th:text="${tournament.status != null ? tournament.status : 'Non défini'}"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <p><a th:href="@{/tournaments}">Retour au catalogue</a></p>
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-header border-secondary text-uppercase fw-bold text-info">
+                    Sponsors Officiels
+                </div>
+                <div class="card-body">
+                    <div th:if="${tournament.sponsors == null or tournament.sponsors.isEmpty()}" class="text-muted">
+                        Aucun sponsor pour ce tournoi.
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-4" th:if="${tournament.sponsors != null}">
+                        <div th:each="sponsor : ${tournament.sponsors}" class="text-center">
+                            <img th:src="${sponsor.logoUrl}" 
+                                 th:alt="${sponsor.name}"
+                                 class="bg-white rounded p-1 mb-2" 
+                                 style="height: 60px; width: 60px; object-fit: contain;">
+                            <div class="small fw-bold text-white-50" th:text="${sponsor.name}">Nom</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 </body>
 </html>
