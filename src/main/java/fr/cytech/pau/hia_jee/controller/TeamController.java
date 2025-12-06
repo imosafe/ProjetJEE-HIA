@@ -56,7 +56,7 @@ public class TeamController {
         }
 
         model.addAttribute("availableTournaments", compatibleTournaments);
-        return "teams/my_team";
+        return "teams/my-team";
     }
 
     // --- 2. CRÉATION ---
