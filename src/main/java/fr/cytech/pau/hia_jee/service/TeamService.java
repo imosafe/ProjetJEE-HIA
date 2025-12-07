@@ -22,7 +22,7 @@ public class TeamService {
     public List<Team> findAllTeams() {
         return teamRepository.findAll();
     }
-
+    @Transactional
     public Team createTeam(Team team, User creator) {
         if (teamRepository.existsByName(team.getName())) {
             throw new RuntimeException("Le nom d'équipe est déjà pris !");
