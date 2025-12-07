@@ -49,15 +49,35 @@
             </a>
         </div>
 
-        <div th:if="${session.user != null && session.user.role.name() == 'ADMIN' && (tournament.matches == null || tournament.matches.isEmpty())}" 
-             class="alert alert-warning text-center">
-            <p class="mb-2">L'arbre n'a pas encore été généré. Assurez-vous que les équipes sont inscrites.</p>
-            <form th:action="@{/admin/tournaments/{id}/generate(id=${tournament.id})}" method="post">
-                <button class="btn btn-danger fw-bold shadow px-4">
-                    <i class="bi bi-lightning-fill"></i> GÉNÉRER L'ARBRE MAINTENANT
-                </button>
-            </form>
-        </div>
+        <div th:if="${session.user != null && session.user.role.name() == 'ADMIN' 
+              && (tournament.matches == null || tournament.matches.isEmpty()) 
+              && (tournament.teams == null || tournament.teams.size() < 2)}" 
+     class="alert alert-danger text-center shadow-sm">
+    <h4 class="alert-heading"><i class="bi bi-exclamation-octagon-fill"></i> Pas assez de participants</h4>
+    <p class="mb-0">
+        Il faut au moins <strong>2 équipes</strong> pour générer un arbre. 
+        <br>
+        Actuellement : <span class="badge bg-white text-danger fs-6" th:text="${tournament.teams != null ? tournament.teams.size() : 0}">0</span> équipe(s) inscrite(s).
+    </p>
+</div>
+
+<div th:if="${session.user != null && session.user.role.name() == 'ADMIN' 
+              && (tournament.matches == null || tournament.matches.isEmpty()) 
+              && (tournament.teams != null && tournament.teams.size() >= 2)}" 
+     class="alert alert-warning text-center">
+    
+    <p class="mb-2">
+        <i class="bi bi-info-circle-fill"></i> 
+        L'arbre n'a pas encore été généré, mais 
+        <strong><span th:text="${tournament.teams.size()}">X</span> équipes</strong> sont prêtes.
+    </p>
+    
+    <form th:action="@{/admin/tournaments/{id}/generate(id=${tournament.id})}" method="post">
+        <button class="btn btn-danger fw-bold shadow px-4">
+            <i class="bi bi-lightning-fill"></i> GÉNÉRER L'ARBRE MAINTENANT
+        </button>
+    </form>
+</div>
 
         <hr class="border-secondary">
 
