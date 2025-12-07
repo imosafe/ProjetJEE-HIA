@@ -159,7 +159,7 @@
                                     <span th:if="${t.status != null and t.status.name() == 'TERMINE'}" class="badge bg-dark" style="font-size: 0.6rem;">Terminé</span>
                                 </div>
                                 
-                                <a th:href="@{/tournaments/{id}(id=${t.id})}" 
+                                <a th:href="@{/tournaments/view/{id}(id=${t.id})}"
                                    class="btn btn-sm btn-outline-primary" 
                                    title="Voir la fiche">
                                     <i class="bi bi-eye-fill"></i>
