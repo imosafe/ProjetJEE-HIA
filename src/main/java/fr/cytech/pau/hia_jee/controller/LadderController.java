@@ -10,10 +10,6 @@ public class LadderController {
 
     /**
      * Gère la requête pour voir le classement.
-     * URL : GET /ladder
-     *
-     * @return Le nom logique de la vue ("ladder"), que Spring va résoudre 
-     * en cherchant le fichier "src/main/resources/templates/ladder.html".
      */
     @GetMapping("/ladder")
     public String showLadder() {
