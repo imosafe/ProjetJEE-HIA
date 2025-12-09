@@ -100,8 +100,9 @@ public class AuthController {
         if (user != null) {
             // --- SUCCÈS ---
             
-            // 1. Mise en session : C'est l'étape CRUCIALE.
+            // 1. Mise en SESSION : C'est l'étape CRUCIALE.
             // Tant que cet objet "user" est dans la session, l'utilisateur est considéré comme connecté.
+
             session.setAttribute("user", user);
 
             // 2. Redirection conditionnelle selon le Rôle

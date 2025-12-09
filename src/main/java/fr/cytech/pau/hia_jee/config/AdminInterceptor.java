@@ -13,7 +13,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class AdminInterceptor implements HandlerInterceptor {
 
-
+    // 🗣️ "CYCLE DE VIE : preHandle s'exécute AVANT que la requête n'arrive au Contrôleur."
+    // "C'est un point de contrôle centralisé pour la sécurité (Pattern Interceptor)."
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         
@@ -23,6 +24,8 @@ public class AdminInterceptor implements HandlerInterceptor {
         HttpSession session = request.getSession(false); 
 
         // 2. Vérifier si la session existe (l'utilisateur est-il passé par le login ?)
+        // 🗣️ "SÉCURITÉ DÉFENSIVE : Premier rempart. Si l'utilisateur n'a pas de session active"
+        // "(cookie JSESSIONID absent ou expiré), je rejette immédiatement la requête."
         if (session == null) {
             System.out.println("❌ [AdminInterceptor] Pas de session !");
             // Redirection vers la page de login avec un code d'erreur
@@ -31,6 +34,7 @@ public class AdminInterceptor implements HandlerInterceptor {
         }
 
         // Récupération de l'objet User stocké en session (nécessite un cast explicite)
+        // 🗣️ "DÉSÉRIALISATION : Je récupère l'identité de l'utilisateur stockée en mémoire serveur (Stateful)."
         User user = (User) session.getAttribute("user");
         
         // Logs de débogage pour tracer ce qui se passe dans la console serveur
@@ -46,6 +50,8 @@ public class AdminInterceptor implements HandlerInterceptor {
         // - L'utilisateur ne doit pas être null (session existante mais attribut manquant ?)
         // - Le rôle ne doit pas être null
         // - Le rôle DOIT être ADMIN
+        // 🗣️ "RBAC (Role-Based Access Control) : C'est le cœur de la logique."
+        // "Je vérifie non seulement que l'utilisateur est connecté (authn), mais qu'il a le droit ADMIN (authz)."
         if (user != null && user.getRole() != null && user.getRole() == Role.ADMIN) {
             System.out.println("✅ [AdminInterceptor] Admin autorisé !");
             return true; // Tout est bon, on laisse passer la requête vers le Controller

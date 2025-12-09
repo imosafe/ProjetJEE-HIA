@@ -21,6 +21,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         
         // Enregistrement de l'AdminInterceptor
+        // 🗣️ "CONFIGURATION : J'applique mon intercepteur de sécurité uniquement sur les routes /admin/**."
         registry.addInterceptor(adminInterceptor)
                 // Définition des règles de filtrage :
                 // L'intercepteur ne se déclenchera QUE si l'URL commence par "/admin/"

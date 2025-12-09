@@ -26,6 +26,7 @@ import java.util.List;
 @RequestMapping("/teams")
 public class TeamController {
 
+    // 🗣️ "J'utilise l'Injection de Dépendances (@Autowired) pour accéder à mes services et repositories sans couplage fort."
     @Autowired private TeamService teamService;
     @Autowired private UserService userService;
     @Autowired private UserRepository userRepository;       // Utile pour rafraîchir les données User
@@ -62,6 +63,9 @@ public class TeamController {
             // IMPORTANT : On recharge l'utilisateur depuis la BDD via son ID.
             // Pourquoi ? L'objet en session ("sessionUser") peut être périmé (ex: il a rejoint une équipe
             // dans un autre onglet, mais la session n'est pas à jour).
+
+            // 🗣️ "SÉCURITÉ SESSION : Je vérifie si l'utilisateur existe toujours en BDD."
+            // "Si un admin l'a supprimé pendant qu'il naviguait, la session Java est obsolète. Je force la déconnexion."
             User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
 
             if (dbUser != null) {
@@ -130,6 +134,9 @@ public class TeamController {
         List<Tournament> compatibleTournaments = new ArrayList<>();
 
         if (allUpcoming != null) {
+
+            // 🗣️ "LOGIQUE MÉTIER : Algorithme de filtrage."
+            // "Je ne montre pas tous les tournois. Je filtre Java pour ne garder que ceux du même jeu (LoL vs Valorant)."
             for (Tournament t : allUpcoming) {
                 // Condition 1 : Le jeu du tournoi doit correspondre au jeu de l'équipe
                 boolean sameGame = (team.getGame() != null && team.getGame().equals(t.getGame()));
@@ -206,7 +213,9 @@ public class TeamController {
             return "redirect:/teams/my";
 
         } catch (DataIntegrityViolationException e) {
-            // On attrape l'erreur SQL "Unique index or primary key violation"
+            // 🗣️ "ROBUSTESSE : J'intercepte ici l'erreur SQL (Contrainte UNIQUE)."
+            // "Si l'utilisateur essaie de tricher et de créer 2 équipes, la BDD renvoie une erreur."
+            // "Je la transforme en message lisible pour ne pas crasher l'application (Erreur 500)."
             model.addAttribute("error", "Impossible de créer l'équipe : Vous êtes déjà chef d'une équipe ou ce nom est déjà pris.");
             return "teams/create";
 
@@ -326,9 +335,12 @@ public class TeamController {
             // --- CORRECTIF DE SÉCURITÉ CONTRE LA CASCADE ---
             // On retire d'abord l'utilisateur de l'équipe et on SAUVEGARDE l'utilisateur.
             // Cela tente de briser le lien côté User avant que l'équipe ne soit supprimée.
-            dbUser.setTeam(null);
-            userRepository.save(dbUser); // Mise à jour vitale en base
 
+            // 🗣️ "GESTION DES CASCADES JPA : Suppression complexe."
+            // "Je dois rompre le lien User <-> Team manuellement avant de supprimer l'équipe."
+            // "Sinon, selon la config Hibernate, supprimer l'équipe pourrait supprimer l'utilisateur (CascadeType.ALL)."
+            dbUser.setTeam(null);
+            userRepository.save(dbUser); // 🗣️ "Le .save() est obligatoire pour valider l'UPDATE SQL."
             // Mise à jour de la session immédiatement
             sessionUser.setTeam(null);
             session.setAttribute("user", sessionUser);
