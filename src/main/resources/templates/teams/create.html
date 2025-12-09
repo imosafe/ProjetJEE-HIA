@@ -16,7 +16,8 @@
                 <div class="card-body p-4">
 
                     <div th:if="${error}" class="alert alert-danger" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${error}">Erreur</span>
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span th:text="${error}">Message d'erreur</span>
                     </div>
 
                     <form action="/teams/new" method="post" th:object="${team}">

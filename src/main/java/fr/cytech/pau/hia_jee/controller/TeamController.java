@@ -1,6 +1,7 @@
 package fr.cytech.pau.hia_jee.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException; // IMPORTANT : Pour gérer l'erreur SQL
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +20,10 @@ import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 
-//Contrôleur principal pour la gestion des Équipes (Teams).
- 
+// Contrôleur principal pour la gestion des Équipes (Teams).
+
 @Controller
-@RequestMapping("/teams") 
+@RequestMapping("/teams")
 public class TeamController {
 
     @Autowired private TeamService teamService;
@@ -51,7 +52,7 @@ public class TeamController {
         if (team == null) return "redirect:/teams";
 
         User sessionUser = (User) session.getAttribute("user");
-        
+
         // Drapeaux pour la vue (Thymeleaf)
         boolean isMember = false;
         boolean canJoin = false;
@@ -62,14 +63,14 @@ public class TeamController {
             // Pourquoi ? L'objet en session ("sessionUser") peut être périmé (ex: il a rejoint une équipe
             // dans un autre onglet, mais la session n'est pas à jour).
             User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
-            
+
             if (dbUser != null) {
                 // Si l'utilisateur a une équipe...
                 if (dbUser.getTeam() != null) {
                     // ... et que c'est celle qu'on regarde actuellement
                     if (dbUser.getTeam().getId().equals(team.getId())) {
                         isMember = true;
-                        
+
                         // Vérification si c'est le chef (Leader)
                         if (team.getLeader() != null && team.getLeader().getId().equals(dbUser.getId())) {
                             isLeader = true;
@@ -88,7 +89,7 @@ public class TeamController {
         model.addAttribute("canJoin", canJoin);
         model.addAttribute("isLeader", isLeader);
 
-        return "teams/profile"; 
+        return "teams/profile";
     }
 
     // ============================================================
@@ -107,14 +108,14 @@ public class TeamController {
 
         // Rafraîchissement des données utilisateur
         User user = userRepository.findById(sessionUser.getId()).orElse(null);
-        
+
         // Si pas d'utilisateur ou pas d'équipe -> direction page de création
         if (user == null || user.getTeam() == null) return "redirect:/teams/new";
 
         // Récupération de l'équipe complète
         Team team = teamService.findTeamWithMembers(user.getTeam().getId());
         model.addAttribute("team", team);
-        
+
         // Configuration des permissions (Ici, on est forcément membre)
         boolean isLeader = (team.getLeader() != null && team.getLeader().getId().equals(user.getId()));
         model.addAttribute("isMember", true);
@@ -123,7 +124,7 @@ public class TeamController {
 
         // --- LOGIQUE DE FILTRAGE DES TOURNOIS ---
         // On veut proposer uniquement les tournois pertinents pour cette équipe.
-        
+
         // 1. On récupère tous les tournois "OUVERT"
         List<Tournament> allUpcoming = tournamentRepository.findByStatus(StatusTournament.OUVERT);
         List<Tournament> compatibleTournaments = new ArrayList<>();
@@ -132,7 +133,7 @@ public class TeamController {
             for (Tournament t : allUpcoming) {
                 // Condition 1 : Le jeu du tournoi doit correspondre au jeu de l'équipe
                 boolean sameGame = (team.getGame() != null && team.getGame().equals(t.getGame()));
-                
+
                 // Condition 2 : L'équipe ne doit pas DÉJÀ être inscrite
                 // (On parcourt la liste des équipes inscrites au tournoi pour vérifier)
                 boolean notRegistered = t.getTeams().stream()
@@ -145,9 +146,9 @@ public class TeamController {
         }
 
         model.addAttribute("availableTournaments", compatibleTournaments);
-        
+
         // On réutilise la vue 'profile' car elle est conçue pour s'adapter
-        return "teams/profile"; 
+        return "teams/profile";
     }
 
     // ============================================================
@@ -158,9 +159,17 @@ public class TeamController {
     public String showCreateForm(HttpSession session, Model model) {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser == null) return "redirect:/login";
-        
+
+        // CORRECTION : Au lieu de orElseThrow(), on gère le cas où l'user n'existe plus
+        User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
+
+        if (dbUser == null) {
+            // L'utilisateur en session a été supprimé de la BDD => On le déconnecte proprement
+            session.invalidate();
+            return "redirect:/login";
+        }
+
         // Si l'utilisateur a déjà une équipe, il ne peut pas en créer une autre
-        User dbUser = userRepository.findById(sessionUser.getId()).orElseThrow();
         if (dbUser.getTeam() != null) return "redirect:/teams/my";
 
         model.addAttribute("team", new Team());
@@ -172,17 +181,37 @@ public class TeamController {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser == null) return "redirect:/login";
 
+        // Double sécurité : on vérifie manuellement avant le try/catch
+        User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
+        if (dbUser != null && dbUser.getTeam() != null) {
+            model.addAttribute("error", "Vous appartenez déjà à une équipe. Impossible d'en créer une nouvelle.");
+            return "teams/create";
+        }
+
         try {
             // Le service crée l'équipe et assigne l'utilisateur comme Leader
             Team savedTeam = teamService.createTeam(team, sessionUser);
-            
-            // MISE À JOUR CRITIQUE DE LA SESSION
-            // Si on ne fait pas ça, l'utilisateur verra toujours "Créer une équipe" dans le menu
+
+            // CORRECTION: On lie explicitement l'utilisateur à l'équipe en base de données
+            // C'est vital pour que le lien soit persistant
+            if (dbUser != null) {
+                dbUser.setTeam(savedTeam);
+                userRepository.save(dbUser);
+            }
+
+            // Mise à jour de la session
             sessionUser.setTeam(savedTeam);
             session.setAttribute("user", sessionUser);
-            
+
             return "redirect:/teams/my";
+
+        } catch (DataIntegrityViolationException e) {
+            // On attrape l'erreur SQL "Unique index or primary key violation"
+            model.addAttribute("error", "Impossible de créer l'équipe : Vous êtes déjà chef d'une équipe ou ce nom est déjà pris.");
+            return "teams/create";
+
         } catch (RuntimeException e) {
+            // Autres erreurs génériques
             model.addAttribute("error", e.getMessage());
             return "teams/create";
         }
@@ -202,7 +231,7 @@ public class TeamController {
 
         // Vérification en BDD
         User user = userRepository.findById(sessionUser.getId()).orElse(null);
-        
+
         if (user == null || user.getTeam() != null) {
             redirectAttributes.addFlashAttribute("error", "Impossible : Vous avez déjà une équipe.");
             return "redirect:/teams/my";
@@ -214,16 +243,16 @@ public class TeamController {
                 // Logique métier d'adhésion
                 user.setTeam(teamToJoin);
                 userRepository.save(user);
-                
+
                 // Mise à jour Session
                 sessionUser.setTeam(teamToJoin);
                 session.setAttribute("user", sessionUser);
-                
+
                 redirectAttributes.addFlashAttribute("success", "Bienvenue chez " + teamToJoin.getName() + " !");
                 return "redirect:/teams/my";
             }
         } catch (Exception e) {
-             redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de l'adhésion: " + e.getMessage());
         }
 
         return "redirect:/teams";
@@ -260,11 +289,11 @@ public class TeamController {
             try {
                 // Appel Service
                 userService.leaveTeam(sessionUser.getId());
-                
+
                 // Mise à jour Session : On retire l'équipe de l'objet en mémoire
                 sessionUser.setTeam(null);
                 session.setAttribute("user", sessionUser);
-                
+
                 redirectAttributes.addFlashAttribute("success", "Vous avez quitté l'équipe.");
             } catch (Exception e) {
                 redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -281,19 +310,32 @@ public class TeamController {
     public String dissolveTeam(HttpSession session, RedirectAttributes redirectAttributes) {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser == null) return "redirect:/login";
-        
-        User dbUser = userRepository.findById(sessionUser.getId()).orElseThrow();
-        
+
+        User dbUser = userRepository.findById(sessionUser.getId()).orElse(null);
+        if (dbUser == null) {
+            session.invalidate();
+            return "redirect:/login";
+        }
+
         // Vérification stricte : Seul le leader peut dissoudre
-        if (dbUser.getTeam() != null && dbUser.getTeam().getLeader() != null 
-            && dbUser.getTeam().getLeader().getId().equals(dbUser.getId())) {
-            
-            teamService.dissolveTeam(dbUser.getTeam().getId());
-            
-            // Mise à jour session
+        if (dbUser.getTeam() != null && dbUser.getTeam().getLeader() != null
+                && dbUser.getTeam().getLeader().getId().equals(dbUser.getId())) {
+
+            Long teamId = dbUser.getTeam().getId(); // On sauvegarde l'ID
+
+            // --- CORRECTIF DE SÉCURITÉ CONTRE LA CASCADE ---
+            // On retire d'abord l'utilisateur de l'équipe et on SAUVEGARDE l'utilisateur.
+            // Cela tente de briser le lien côté User avant que l'équipe ne soit supprimée.
+            dbUser.setTeam(null);
+            userRepository.save(dbUser); // Mise à jour vitale en base
+
+            // Mise à jour de la session immédiatement
             sessionUser.setTeam(null);
             session.setAttribute("user", sessionUser);
-            
+
+            // Ensuite, on supprime l'équipe
+            teamService.dissolveTeam(teamId);
+
             redirectAttributes.addFlashAttribute("success", "L'équipe a été dissoute.");
         } else {
             redirectAttributes.addFlashAttribute("error", "Action non autorisée (Vous n'êtes pas le chef).");
@@ -309,7 +351,7 @@ public class TeamController {
     public String kickMember(@PathVariable Long memberId, HttpSession session, RedirectAttributes redirectAttributes) {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser != null) {
-            try { 
+            try {
                 // La méthode kickMember du service doit vérifier que c'est bien le leader qui demande
                 userService.kickMember(sessionUser.getId(), memberId);
                 redirectAttributes.addFlashAttribute("success", "Membre exclu avec succès.");
@@ -327,15 +369,13 @@ public class TeamController {
     public String joinByInvite(@PathVariable String code, HttpSession session, RedirectAttributes redirectAttributes) {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser == null) return "redirect:/login";
-        
+
         try {
             userService.joinTeamByInviteCode(sessionUser.getId(), code);
-            
-            // Récupération de l'équipe pour mettre à jour la session
-            Team t = teamService.findByInviteCode(code); 
+            Team t = teamService.findByInviteCode(code);
             sessionUser.setTeam(t);
             session.setAttribute("user", sessionUser);
-            
+
             redirectAttributes.addFlashAttribute("success", "Invitation acceptée !");
             return "redirect:/teams/my";
         } catch (RuntimeException e) {
