@@ -9,14 +9,19 @@ import java.util.Optional;
 
 public interface TeamRepository extends JpaRepository<Team, Long> {
 
-    // Utile lors de la création d'équipe : Vérifier que le nom n'existe pas déjà
+    // Vérifie si une équipe porte déjà ce nom.
+    
     boolean existsByName(String name);
 
-    // Si tu as besoin de chercher une équipe par son nom exact
+    //Récupère une équipe par son nom exact.
     Team findByName(String name);
 
+    // Récupère une équipe via son code d'invitation unique.
+    Optional<Team> findByInviteCode(String inviteCode);
+
+    // --- 2. REQUÊTE PERSONNALISÉE (JPQL) ---
+    
+    //Récupère une équipe ET ses membres en une seule requête SQL.
     @Query("SELECT t FROM Team t LEFT JOIN FETCH t.members WHERE t.id = :id")
     Optional<Team> findByIdWithMembers(@Param("id") Long id);
-
-    Optional<Team> findByInviteCode(String inviteCode);
 }

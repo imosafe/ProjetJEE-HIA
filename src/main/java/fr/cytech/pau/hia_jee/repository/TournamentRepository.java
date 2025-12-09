@@ -9,5 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament,Long> {
+    
+    //Récupère un tournois par son status.
     List<Tournament> findByStatus(StatusTournament status);
 }

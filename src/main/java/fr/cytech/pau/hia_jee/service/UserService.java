@@ -11,7 +11,10 @@ import fr.cytech.pau.hia_jee.model.Team;
 import fr.cytech.pau.hia_jee.model.User;
 import fr.cytech.pau.hia_jee.repository.TeamRepository;
 import fr.cytech.pau.hia_jee.repository.UserRepository;
-
+/**
+ * Service gérant la logique liée aux Utilisateurs.
+ * Il s'occupe de l'inscription, de l'authentification et de la gestion du profil.
+ */
 @Service
 public class UserService {
 

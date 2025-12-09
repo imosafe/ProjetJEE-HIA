@@ -14,8 +14,10 @@ import fr.cytech.pau.hia_jee.repository.MatchRepository;
 import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import jakarta.transaction.Transactional;
 
+/**
+ * Service gérant la mécanique sportive des tournois.
+ */
 @Service
-//@RequiredArgsConstructor // 1. Génère le constructeur pour l'injection des Repos
 public class TournamentService {
 
     private final TournamentRepository tRepo;
@@ -26,12 +28,22 @@ public class TournamentService {
         this.mRepo = mRepo;
     }
 
+    // ============================================================
+    // GÉNÉRATION DE L'ARBRE (BRACKET)
+    // ============================================================
+
+    /**
+     * Génère l'arbre des matchs pour un tournoi donné.
+     * Algorithme basé sur les puissances de 2 (2, 4, 8, 16, 32...).
+     * Gère les "Byes" (qualification automatique) si le nombre d'équipes n'est pas une puissance de 2.
+     */
     @Transactional
     public void generateBracket(Long tournamentId) {
         Tournament tournament = tRepo.findById(tournamentId)
             .orElseThrow(() -> new RuntimeException("Tournoi introuvable"));
 
-        // Nettoyage préalable (si on régénère)
+        // 1. Nettoyage préalable
+        // Si l'admin clique 2 fois sur "Générer", on supprime l'ancien arbre pour éviter les doublons.
         if (tournament.getMatches() != null) {
             mRepo.deleteAll(tournament.getMatches());
             tournament.getMatches().clear();
@@ -41,75 +53,84 @@ public class TournamentService {
         int teamCount = teams.size();
         if (teamCount < 2) throw new RuntimeException("Il faut au moins 2 équipes !");
 
-        // Calcul taille bracket (puissance de 2)
+        // 2. Calcul de la taille du bracket (Puissance de 2 supérieure)
+        // Ex: 5 équipes -> bracketSize = 8. (Il y aura 3 "Byes").
+        // Ex: 8 équipes -> bracketSize = 8.
         int bracketSize = 1;
         while (bracketSize < teamCount) bracketSize *= 2;
 
+        // Mélange aléatoire des équipes (Seed random)
         Collections.shuffle(teams);
 
         List<Match> currentRoundMatches = new ArrayList<>();
         int teamIndex = 0;
 
-        // --- ROUND 1 ---
+        // --- 3. GÉNÉRATION DU ROUND 1 (Le bas de l'arbre) ---
+        // On crée autant de matchs que bracketSize / 2.
         for (int i = 0; i < bracketSize / 2; i++) {
             Match match = new Match();
             match.setTournament(tournament);
-            match.setRound(1); // Important pour l'affichage
+            match.setRound(1); 
 
-            // Slot A
+            // Remplissage Slot A
             if (teamIndex < teams.size()) {
                 match.setTeamA(teams.get(teamIndex++));
             }
             
-            // Slot B (ou Bye)
+            // Remplissage Slot B
             if (teamIndex < teams.size()) {
                 match.setTeamB(teams.get(teamIndex++));
+                // Initialisation des scores à 0 pour l'affichage
                 match.setScoreA(0);
                 match.setScoreB(0);
             } else {
-                // BYE DETECTÉ
+                // --- GESTION DU BYE ---
+                // Si plus d'équipe dispo pour le slot B, l'équipe A gagne automatiquement.
                 match.setTeamB(null);
-                match.setScoreA(1);
+                match.setScoreA(1); // Score arbitraire de victoire
                 match.setScoreB(0);
-                match.setWinner(match.getTeamA()); // Victoire immédiate
+                match.setWinner(match.getTeamA()); // Victoire immédiate !
             }
             
             match = mRepo.save(match);
             currentRoundMatches.add(match);
         }
 
-        // --- ROUNDS SUIVANTS (Construction de l'arbre) ---
+        // --- 4. CONSTRUCTION DES ROUNDS SUIVANTS (L'arbre monte) ---
         int roundNumber = 2;
         
+        // Tant qu'il reste plus d'un match dans le round actuel (donc pas encore la finale)
         while (currentRoundMatches.size() > 1) {
             List<Match> nextRoundMatches = new ArrayList<>();
             
+            // On prend les matchs 2 par 2 (Match 1 vs Match 2, Match 3 vs Match 4...)
             for (int i = 0; i < currentRoundMatches.size(); i += 2) {
                 Match match1 = currentRoundMatches.get(i);
                 Match match2 = currentRoundMatches.get(i + 1);
 
-                // Création du match parent
+                // Création du match parent (le tour suivant)
                 Match nextMatch = new Match();
                 nextMatch.setTournament(tournament);
                 nextMatch.setRound(roundNumber);
                 nextMatch.setScoreA(0);
                 nextMatch.setScoreB(0);
                 
-                // --- CORRECTION MAJEURE ICI : PROPAGATION DES BYES ---
-                // Si match1 a déjà un vainqueur (cas du Bye), on le fait avancer tout de suite
+                // --- PROPAGATION IMMÉDIATE DES BYES ---
+                // C'est crucial : Si au Round 1, une équipe a gagné par "Bye", 
+                // elle doit apparaître IMMÉDIATEMENT au Round 2.
+                // Sinon, le Round 2 afficherait des matchs vides "TBD vs TBD".
                 if (match1.getWinner() != null) {
                     nextMatch.setTeamA(match1.getWinner());
                 }
                 
-                // Idem pour match2
                 if (match2.getWinner() != null) {
                     nextMatch.setTeamB(match2.getWinner());
                 }
-                // -----------------------------------------------------
-
+                
                 nextMatch = mRepo.save(nextMatch);
 
-                // Liaison enfants -> parent
+                // --- LIAISON ENFANTS -> PARENT ---
+                // C'est ce qui crée la structure de graphe
                 match1.setNextMatch(nextMatch);
                 match2.setNextMatch(nextMatch);
                 mRepo.save(match1);
@@ -118,10 +139,12 @@ public class TournamentService {
                 nextRoundMatches.add(nextMatch);
             }
             
+            // On passe à l'étage supérieur
             currentRoundMatches = nextRoundMatches;
             roundNumber++;
         }
         
+        // Le tournoi est lancé !
         tournament.setStatus(StatusTournament.EN_COURS);
         tRepo.save(tournament);
     }
@@ -137,13 +160,21 @@ public class TournamentService {
     public java.util.Optional<Tournament> findById(Long id) {
         return tRepo.findById(id);
     }
+
+    // ============================================================
+    // SAISIE DE SCORE ET AVANCEMENT
+    // ============================================================
+
+    /**
+     * Enregistre le score d'un match et fait avancer le vainqueur.
+     */
     @Transactional
     public void enterScore(Long matchId, int scoreA, int scoreB) {
         // 1. Récupération du match
         Match match = mRepo.findById(matchId)
             .orElseThrow(() -> new RuntimeException("Match introuvable"));
 
-        // 2. Vérifications de sécurité
+        // 2. Sécurités
         if (match.getTeamA() == null || match.getTeamB() == null) {
             throw new RuntimeException("Le match n'est pas prêt (il manque une équipe).");
         }
@@ -152,49 +183,51 @@ public class TournamentService {
             throw new RuntimeException("Match nul interdit dans un arbre ! Il faut un vainqueur.");
         }
 
-        // 3. Enregistrement des scores
+        // 3. Mise à jour des scores
         match.setScoreA(scoreA);
         match.setScoreB(scoreB);
 
-        // 4. Désignation du vainqueur
+        // 4. Calcul du vainqueur
         Team winner = (scoreA > scoreB) ? match.getTeamA() : match.getTeamB();
         match.setWinner(winner);
         
-        mRepo.save(match); // On sauvegarde l'état actuel
+        mRepo.save(match); 
 
-        // 5. PROPAGATION (Faire monter le vainqueur)
+        // 5. PROPAGATION (Le vainqueur monte au tour suivant)
         Match nextMatch = match.getNextMatch();
 
         if (nextMatch != null) {
-            // Cas : Il y a un match suivant (on est en 8ème, quart, demi...)
+            // Cas classique : Ce n'est pas la finale.
             
-            // Logique : On remplit le premier slot vide trouvé
-            // (Ou on met à jour si le vainqueur y était déjà, cas de correction de score)
+            // On doit savoir : est-ce que ce vainqueur va en position A ou en position B du match suivant ?
+            // Logique : 
+            // - Si la place A est vide -> On se met en A.
+            // - Si la place A est occupée par NOUS-MÊME (cas où l'admin corrige un score saisi par erreur) -> On reste en A.
+            // - Sinon -> On va en B.
             
             if (nextMatch.getTeamA() == null || nextMatch.getTeamA().equals(winner) || isTeamFromThisMatch(nextMatch.getTeamA(), match)) {
-                // Si la place A est vide OU si c'est déjà nous (update) -> On prend la place A
                 nextMatch.setTeamA(winner);
             } else {
-                // Sinon, on prend la place B
                 nextMatch.setTeamB(winner);
             }
             
             mRepo.save(nextMatch);
             
         } else {
-            // Cas : Pas de match suivant = C'était la FINALE !
+            // Cas final : Pas de match suivant, donc le tournoi est fini.
             Tournament tournament = match.getTournament();
             tournament.setStatus(StatusTournament.TERMINE);
-            // On pourrait aussi ajouter un champ 'winner' dans l'entité Tournament ici
             tRepo.save(tournament);
         }
     }
 
-    // Petite méthode utilitaire pour éviter les bugs si on modifie un score
-    // Elle vérifie si l'équipe actuellement dans le nextMatch venait bien de ce match-là
+    /**
+     * Méthode utilitaire pour vérifier l'origine d'une équipe.
+     * Sert à éviter qu'une équipe change de place (A vers B) si on modifie un score.
+     */
     private boolean isTeamFromThisMatch(Team teamInNext, Match currentMatch) {
         if (teamInNext == null) return false;
-        // Si l'équipe dans le match suivant est l'une des deux équipes du match actuel
+        // Vérifie si l'équipe présente dans le match suivant venait bien de ce match-ci
         return teamInNext.equals(currentMatch.getTeamA()) || teamInNext.equals(currentMatch.getTeamB());
     }
 }

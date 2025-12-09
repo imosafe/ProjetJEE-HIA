@@ -14,34 +14,39 @@ import fr.cytech.pau.hia_jee.model.Match;
 import fr.cytech.pau.hia_jee.model.Tournament;
 import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import fr.cytech.pau.hia_jee.service.TournamentService;
-// On n'a plus besoin de HttpSession pour vérifier le login ici
 import jakarta.servlet.http.HttpSession;
 
+//Contrôleur gérant la partie PUBLIQUE des tournois, accessible à tous les visiteurs.
+
 @Controller
-@RequestMapping("/tournaments")
+@RequestMapping("/tournaments") 
 public class PublicTournamentController {
 
     private final TournamentService tournamentService;
     private final TournamentRepository tournamentRepository;
 
+    // Injection de dépendances via le constructeur (Bonne pratique Spring)
     public PublicTournamentController(TournamentService tournamentService, TournamentRepository tournamentRepository) {
         this.tournamentService = tournamentService;
-        this.tournamentRepository=tournamentRepository;
+        this.tournamentRepository = tournamentRepository;
     }
 
-    // ==========================================
-    // CATALOGUE (ACCESSIBLE À TOUS)
-    // ==========================================
+    // ============================================================
+    // CATALOGUE (Liste des tournois)
+    // ============================================================
     @GetMapping
     public String list(Model model) {
-        
+        // Récupération via le service
         List<Tournament> tournaments = tournamentService.findAll();
         model.addAttribute("tournaments", tournaments);
         
-        return "tournament_index"; 
+        return "tournament_index"; // Vue liste
     }
 
-    
+    // ============================================================
+    // DÉTAILS D'UN TOURNOI
+    // ============================================================
+
     @GetMapping("/view/{id:[0-9]+}")
     public String view(@PathVariable Long id, Model model) {
         
@@ -51,36 +56,71 @@ public class PublicTournamentController {
         
         return "tournament_view"; 
     }
-    // ---7. Afficher l'arbre du tournoi
+
+    // ============================================================
+    // ARBRE DE TOURNOI (BRACKET)
+    // ============================================================
+   
     @GetMapping("/tree/{id}")
     public String showTree(@PathVariable Long id, Model model, HttpSession session){
-        Tournament tournament =tournamentRepository.findById(id).orElseThrow(()->new RuntimeException("Tournoi introuvable"));
-        //Recupérer tous les matchs
-        List<Match> allMatches=tournament.getMatches();
-        //Logique de découpage en rounds
-        Map<Integer, List<Match>> matchesByRound=new LinkedHashMap<>();
-        if(allMatches!=null && !allMatches.isEmpty()){
-            //On s'assure qu'ils sont triés par ID
-            allMatches.sort((m1,m2)->m1.getId().compareTo(m2.getId()));
-            int matchesInCurrentRound=(allMatches.size()+1)/2;
-            int index=0;
-            int roundNumber=1;
-            //On découpe la liste morceau par morceau
-            while(index<allMatches.size()){
-                //on prend la sous-liste pour ce round
-                int endIndex=Math.min(index+matchesInCurrentRound, allMatches.size());
-                List<Match> roundMatches=allMatches.subList(index, endIndex);
+        // 1. Récupération du tournoi
+        Tournament tournament = tournamentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tournoi introuvable"));
+        
+        // 2. Récupérer tous les matchs associés au tournoi
+        List<Match> allMatches = tournament.getMatches();
+
+        // Map pour stocker les matchs par round :
+        // Clé = Numéro du round (1, 2, 3...)
+        // Valeur = Liste des matchs de ce round
+        // LinkedHashMap est utilisé pour garantir l'ordre d'insertion (Round 1, puis 2, puis 3...)
+        Map<Integer, List<Match>> matchesByRound = new LinkedHashMap<>();
+
+        if(allMatches != null && !allMatches.isEmpty()){
+            
+            // 3. Tri des matchs par ID croissant.
+            // HYPOTHÈSE : Les matchs ont été créés dans l'ordre chronologique en base de données.
+            // ID petits = 1er tour, ID moyens = 2e tour, ID grand = Finale.
+            allMatches.sort((m1, m2) -> m1.getId().compareTo(m2.getId()));
+
+            // 4. Algorithme de découpage par puissance de 2
+            // Dans un tournoi à élimination directe complet, le nombre de matchs total est N-1 (où N est le nb d'équipes).
+            // Le 1er tour contient environ la moitié des matchs totaux + 1.
+            int matchesInCurrentRound = (allMatches.size() + 1) / 2;
+            
+            int index = 0;          // Curseur pour parcourir la liste principale
+            int roundNumber = 1;    // Compteur de rounds
+
+            // On boucle tant qu'on n'a pas traité tous les matchs de la liste
+            while(index < allMatches.size()){
+                
+                // Calcul de l'index de fin pour le round actuel
+                // Math.min évite de dépasser la taille de la liste (IndexOutOfBoundsException)
+                int endIndex = Math.min(index + matchesInCurrentRound, allMatches.size());
+                
+                // Extraction de la sous-liste correspondant au Round actuel
+                List<Match> roundMatches = allMatches.subList(index, endIndex);
+                
+                // Stockage dans la Map
                 matchesByRound.put(roundNumber, roundMatches);
-                //Préparation pour le tour suivant
-                index=endIndex;
-                matchesInCurrentRound=matchesInCurrentRound/2;
+
+                // --- Préparation pour le tour suivant ---
+                
+                // On avance le curseur à la fin du round qu'on vient de traiter
+                index = endIndex;
+                
+                // Le nombre de matchs est divisé par 2 à chaque tour suivant (8e -> quarts -> demies -> finale)
+                matchesInCurrentRound = matchesInCurrentRound / 2;
+                
+                // On passe au round suivant
                 roundNumber++;
             }
         }
-        // envoi des données à la vue
+
+        // 5. Envoi des données à la vue
         model.addAttribute("tournament", tournament);
         model.addAttribute("matchesByRound", matchesByRound);
 
-        return "tournament_tree";
+        return "tournament_tree"; // Vue affichant l'arbre graphique
     }
 }

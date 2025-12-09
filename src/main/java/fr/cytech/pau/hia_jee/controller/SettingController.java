@@ -13,46 +13,63 @@ import fr.cytech.pau.hia_jee.model.User;
 import fr.cytech.pau.hia_jee.service.UserService;
 import jakarta.servlet.http.HttpSession;
 
+//Contrôleur gérant la page de "Paramètres" (Settings) de l'utilisateur.
+
 @Controller
-@RequestMapping("/setting")
+@RequestMapping("/setting") 
 public class SettingController {
 
     @Autowired
     private UserService userService;
 
-    // AFFICHER LA PAGE
+    // ============================================================
+    // AFFICHER LA PAGE DES PARAMÈTRES
+    // ============================================================
+
     @GetMapping
     public String showSettings(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         
-        // Sécurité : Si pas connecté, on renvoie au login
+        // Sécurité manuelle : Si l'utilisateur n'est pas connecté, on le renvoie au login.
         if (user == null) return "redirect:/login"; 
 
+        // On passe l'utilisateur au modèle pour pré-remplir les champs (pseudo, etc.)
         model.addAttribute("user", user);
-        return "setting"; // Correspond à setting.html
+        return "setting"; // Vue: src/main/resources/templates/setting.html
     }
 
+    // ============================================================
     // ACTION : CHANGER PSEUDO
+    // ============================================================
+
     @PostMapping("/update-profile")
     public String updateProfile(@RequestParam String username, HttpSession session, RedirectAttributes redirectAttributes) {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser == null) return "redirect:/login";
 
         try {
-            // Appel au service
+            // 1. Appel au service pour mise à jour en base de données
             User updatedUser = userService.updateUsername(sessionUser.getId(), username);
             
-            // IMPORTANT : Mettre à jour l'utilisateur en session pour que le header change tout de suite
+            // 2. MISE À JOUR DE LA SESSION (Crucial !)
+            // L'objet "user" en session est une copie. Si on change la BDD mais pas la session,
+            // le nom affiché dans la barre de navigation restera l'ancien jusqu'à la prochaine reconnexion.
             session.setAttribute("user", updatedUser);
             
+            // 3. Message flash (s'affichera une seule fois après la redirection)
             redirectAttributes.addFlashAttribute("success", "Pseudo mis à jour avec succès !");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+        
+        // On redirige vers la page GET pour éviter de renvoyer le formulaire si on actualise (F5)
         return "redirect:/setting";
     }
 
+    // ============================================================
     // ACTION : CHANGER MOT DE PASSE
+    // ============================================================
+
     @PostMapping("/update-password")
     public String updatePassword(@RequestParam String currentPassword, 
                                  @RequestParam String newPassword, 
@@ -63,6 +80,7 @@ public class SettingController {
         if (user == null) return "redirect:/login";
 
         try {
+            // Le service gère toute la logique complexe (vérification ancien mdp, hachage nouveau mdp, etc.)
             userService.updatePassword(user.getId(), currentPassword, newPassword, confirmPassword);
             redirectAttributes.addFlashAttribute("success", "Mot de passe modifié !");
         } catch (Exception e) {
@@ -71,17 +89,22 @@ public class SettingController {
         return "redirect:/setting";
     }
 
+    // ============================================================
     // ACTION : QUITTER EQUIPE
+    // ============================================================
+
     @PostMapping("/leave-team")
     public String leaveTeam(HttpSession session, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         try {
-            // On utilise ta méthode existante leaveTeam(Long userId)
+            // 1. Mise à jour en Base de Données
             userService.leaveTeam(user.getId());
             
-            // On met à jour la session manuellement (retirer l'équipe de l'objet session)
+            // 2. Mise à jour de la Session
+            // On doit manuellement dire à l'objet en session qu'il n'a plus d'équipe,
+            // sinon l'interface affichera encore "Mon Équipe" au lieu de disparaître.
             user.setTeam(null);
             session.setAttribute("user", user);
             
@@ -92,14 +115,21 @@ public class SettingController {
         return "redirect:/setting";
     }
 
+    // ============================================================
     // ACTION : SUPPRIMER COMPTE
+    // ============================================================
+
+   
     @PostMapping("/delete-account")
     public String deleteAccount(HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user != null) {
+            // Suppression en BDD
             userService.deleteAccount(user.getId());
-            session.invalidate(); // Déconnexion forcée
+            
+            // Destruction de la session (déconnexion immédiate)
+            session.invalidate(); 
         }
-        return "redirect:/"; // Retour à l'accueil
+        return "redirect:/"; // Retour à l'accueil publique
     }
 }

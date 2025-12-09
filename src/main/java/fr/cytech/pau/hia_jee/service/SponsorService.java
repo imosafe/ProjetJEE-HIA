@@ -9,14 +9,16 @@ import fr.cytech.pau.hia_jee.model.Sponsor;
 import fr.cytech.pau.hia_jee.model.Tournament;
 import fr.cytech.pau.hia_jee.repository.SponsorRepository;
 import fr.cytech.pau.hia_jee.repository.TournamentRepository;
-//import lombok.RequiredArgsConstructor;
 
+/**
+ * Service métier gérant la logique liée aux Sponsors.
+ * * RÔLE DU SERVICE :
+ * Il sert d'intermédiaire entre le Controller (Web) et le Repository (Base de données).
+ */
 @Service
-//@RequiredArgsConstructor
 public class SponsorService {
 
     private final SponsorRepository sponsorRepository;
-    // Injection nécessaire pour mettre à jour la table de liaison Tournament_Sponsor
     private final TournamentRepository tournamentRepository;
 
     public SponsorService(SponsorRepository sponsorRepository, TournamentRepository tournamentRepository) {

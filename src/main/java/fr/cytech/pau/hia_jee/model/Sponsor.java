@@ -5,12 +5,16 @@ import java.util.Set;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated; // Import nécessaire pour @ManyToMany
-import jakarta.persistence.GeneratedValue; // Import nécessaire pour Set
-import jakarta.persistence.GenerationType; // Import nécessaire pour HashSet
+import jakarta.persistence.Enumerated; 
+import jakarta.persistence.GeneratedValue; 
+import jakarta.persistence.GenerationType; 
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 
+/**
+ * Entité représentant un Partenaire / Sponsor.
+ * Un sponsor peut financer plusieurs tournois, et un tournoi peut avoir plusieurs sponsors.
+ */
 @Entity 
 public class Sponsor {
 
@@ -20,28 +24,41 @@ public class Sponsor {
 
     private String name;
 
-    private String logoUrl;
-    private String websiteUrl;
+    private String logoUrl;     // Lien vers l'image du logo
+    private String websiteUrl;  // Lien vers le site vitrine du sponsor
 
-    @Enumerated(EnumType.STRING) // OBLIGATOIRE pour la sécurité , il mest string pas numeration de 0 a 3 
+    // --- GESTION DES ENUMS EN BASE DE DONNÉES ---
+    
+    /**
+     * Type de sponsor (ex: TECHNIQUE, FINANCIER, MEDIA).
+     */
+    @Enumerated(EnumType.STRING) 
     private SponsorType type;
 
-    @Enumerated(EnumType.STRING) // OBLIGATOIRE pour la sécurité , il mest string pas numeration de 0 a 3 
+    /**
+     * Niveau de sponsoring (ex: GOLD, SILVER, BRONZE).
+     */
+    @Enumerated(EnumType.STRING) 
     private SponsorshipLevel level;
-
-
-
-
-    
-    // Relation ManyToMany
+    /* 
+    * * 'mappedBy = "Sponsors"' indique que c'est l'AUTRE classe (Tournament) qui est propriétaire de la relation.
+     * * Cela signifie :
+     * 1. Dans la table de jointure (ex: tournament_sponsors), c'est le Tournament qui pilote les insertions.
+     * 2. Le champ "Sponsors" (avec majuscule ou minuscule selon votre classe Tournament) doit exister dans Tournament.
+     * * Utilisation d'un Set (et non List) pour éviter d'avoir deux fois le même tournoi.
+     * */
     @ManyToMany(mappedBy = "Sponsors") 
     private Set<Tournament> tournaments = new HashSet<>(); 
 
+    // --- CONSTRUCTEURS ---
+
     public Sponsor() {}
+    
     public Sponsor(String name) {
         this.name = name;
-        
     }
+
+    // --- GETTERS & SETTERS ---
 
     public Long getId() {
         return id;
@@ -84,10 +101,11 @@ public class Sponsor {
     public void setLevel(SponsorshipLevel level) {
         this.level = level;
     }
-
-   //liste des tournois associés à un sponsor
+    
     public Set<Tournament> getTournaments() {
        return tournaments;
     }
-
+    
+    // Pas de Setter pour tournaments généralement dans le "mappedBy", 
+    // ou alors il faut gérer la synchronisation des deux côtés.
 }

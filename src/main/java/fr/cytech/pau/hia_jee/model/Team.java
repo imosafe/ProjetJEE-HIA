@@ -17,6 +17,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+/**
+ * Entité représentant une Équipe (Team).
+ * Une équipe est composée de plusieurs joueurs (User), possède un Capitaine (Leader),
+ * se spécialise dans un Jeu (Game) et participe à des Tournois.
+ */
 @Entity
 @Table(name = "teams")
 public class Team {
@@ -25,33 +30,55 @@ public class Team {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Le nom doit être unique en base de données pour éviter les doublons
     @Column(nullable = false, unique = true)
     private String name;
 
     private String logoUrl;
 
+    /**
+     * Code unique permettant de rejoindre l'équipe via un lien direct.
+     * Généré automatiquement à la création via UUID.
+     */
     @Column(unique = true)
     private String inviteCode;
 
-    // --- C'EST CE CHAMP QUI MANQUE ---
+    // --- SPÉCIALISATION DE L'ÉQUIPE ---
+    // Ce champ est crucial pour le filtrage : 
+    // Une équipe de "LoL" ne doit pas pouvoir s'inscrire à un tournoi "FIFA".
     @Enumerated(EnumType.STRING)
     private Game game; // "League of Legends", "Valorant", etc.
 
+    // --- RELATION 1 ---
+    // Une équipe a PLUSIEURS membres.
+    // "mappedBy = team" signifie que la relation est dirigée par l'attribut "team" dans la classe User.
+    // CascadeType.ALL : Si on supprime l'équipe, on supprime/modifie les users associés (attention à la config ici).
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<User> members = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "teams") // "teams" doit correspondre au nom de la liste dans Tournament.java
+    // --- RELATION 2 ---
+    // Une équipe participe à PLUSIEURS tournois.
+    // "mappedBy = teams" fait référence à la liste "private List<Team> teams" dans la classe Tournament.
+    // C'est le Tournament qui est le "propriétaire" de la relation (qui gère la table de jointure).
+    @ManyToMany(mappedBy = "teams") 
     private List<Tournament> tournaments = new ArrayList<>();
 
+    // --- RELATION 3 ---
+    // Une équipe a UN SEUL leader (Chef d'équipe).
+    // Ce leader a des droits spéciaux (dissoudre l'équipe, virer des membres, inscrire aux tournois).
     @OneToOne
     private User leader;
 
-    // Constructeurs
+    // --- CONSTRUCTEUR ---
+    
     public Team() {
+        // Génération automatique d'un code unique (UUID) dès qu'on fait "new Team()".
+        // Ex: "550e8400-e29b-41d4-a716-446655440000"
         this.inviteCode = UUID.randomUUID().toString();
     }
 
-    // Getters & Setters (Indispensables pour Thymeleaf !)
+    // --- GETTERS & SETTERS ---
+    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -61,7 +88,6 @@ public class Team {
     public String getLogoUrl() { return logoUrl; }
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
 
-    // --- ET SURTOUT CE GETTER ---
     public Game getGame() { return game; }
     public void setGame(Game game) { this.game = game; }
 
@@ -73,6 +99,7 @@ public class Team {
 
     public String getInviteCode() { return inviteCode; }
     public void setInviteCode(String inviteCode) { this.inviteCode = inviteCode; }
+    
     public List<Tournament> getTournaments() {
         return tournaments;
     }

@@ -12,73 +12,130 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+// Contrôleur gérant tout le flux d'authentification :
+
 @Controller
 public class AuthController {
 
+    // Injection du service métier qui contient la logique de BDD (UserRepository)
     @Autowired
     private UserService userService;
 
+    // ============================================================
     // --- REGISTER (Inscription) ---
+    // ============================================================
 
+    /**
+     * Affiche le formulaire d'inscription.
+     * URL : GET /register
+     */
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
+        // On passe un objet User vide au formulaire pour que Thymeleaf puisse
+        // faire le lien (binding) avec les champs (th:object="${user}").
         model.addAttribute("user", new User());
-        return "auth/register"; // Assure-toi que le fichier est dans templates/auth/register.html
+        return "auth/register"; // Renvoie le fichier src/main/resources/templates/auth/register.html
     }
 
+    /**
+     * Traite les données soumises par le formulaire d'inscription.
+     * URL : POST /register
+     *
+     * @param user  L'objet User rempli automatiquement par Spring avec les données du formulaire.
+     * @param model Le modèle pour renvoyer des erreurs si besoin.
+     */
     @PostMapping("/register")
     public String processRegister(@ModelAttribute User user, Model model) {
         try {
-            // Le service va se charger de mettre le Role.PLAYER
+            // Appel au service pour sauvegarder l'utilisateur.
+            // C'est le service qui définit le rôle par défaut (PLAYER).
             userService.register(user);
-            return "redirect:/login?success"; // Renvoie vers le login avec message vert
+            
+            // Si tout se passe bien, on REDIRIGE vers la page de login.
+            // Le "?success" permet d'afficher un bandeau vert sur la page de login.
+            return "redirect:/login?success"; 
         } catch (RuntimeException e) {
-            // En cas d'erreur (pseudo pris), on recharge la page avec l'erreur
+            // En cas d'erreur (ex: le nom d'utilisateur existe déjà),
+            // on attrape l'exception lancée par le Service.
+            
+            // On ajoute le message d'erreur au modèle pour l'afficher dans la vue.
             model.addAttribute("error", e.getMessage());
+            
+            // On retourne la MEME page d'inscription pour que l'utilisateur corrige.
             return "auth/register";
         }
     }
 
+    // ============================================================
     // --- LOGIN (Connexion) ---
+    // ============================================================
 
+    /**
+     * Affiche le formulaire de connexion.
+     * URL : GET /login
+     */
     @GetMapping("/login")
     public String showLoginForm() {
-        return "auth/login"; // Assure-toi que le fichier est dans templates/auth/login.html
+        return "auth/login"; 
     }
 
+    /**
+     * Traite la tentative de connexion.
+     * URL : POST /login
+     *
+     * @param username Le pseudo saisi.
+     * @param password Le mot de passe saisi.
+     * @param session  L'objet HttpSession géré par le serveur (Tomcat). C'est ici qu'on stocke l'état connecté.
+     * @param model    Pour afficher les erreurs.
+     */
     @PostMapping("/login")
     public String processLogin(@RequestParam String username,
                                @RequestParam String password,
                                HttpSession session,
                                Model model) {
 
+        // Vérification des identifiants via le service
         User user = userService.authenticate(username, password);
 
         if (user != null) {
-            // 1. On stocke l'objet User complet en session
+            // --- SUCCÈS ---
+            
+            // 1. Mise en session : C'est l'étape CRUCIALE.
+            // Tant que cet objet "user" est dans la session, l'utilisateur est considéré comme connecté.
             session.setAttribute("user", user);
 
-            // 2. Redirection intelligente selon le Rôle (Enum)
+            // 2. Redirection conditionnelle selon le Rôle
             if (user.getRole() == Role.ADMIN) {
-                // Les admins vont vers leur dashboard (à créer plus tard par Dev A ou C)
-                // Pour l'instant, redirigeons vers l'accueil pour éviter une 404
+                // Si c'est un admin, on pourrait le rediriger vers /admin/dashboard
+                // Pour l'instant, redirection vers l'accueil.
                 return "redirect:/";
             } else {
-                // Les joueurs vont vers l'accueil
+                // Si c'est un joueur lambda, redirection vers l'accueil public.
                 return "redirect:/";
             }
         } else {
-            // Login échoué
+            // --- ÉCHEC ---
+            // On reste sur la page de login et on affiche une erreur générique de sécurité.
             model.addAttribute("error", "Nom d'utilisateur ou mot de passe incorrect.");
             return "auth/login";
         }
     }
 
+    // ============================================================
     // --- LOGOUT (Déconnexion) ---
+    // ============================================================
 
+    /**
+     * Gère la déconnexion.
+     * URL : GET /logout
+     */
     @GetMapping("/logout")
     public String logout(HttpSession session) {
-        session.invalidate(); // Détruit la session (l'utilisateur est oublié)
+        // Invalider la session détruit toutes les données stockées (l'objet "user" disparait).
+        // Au prochain chargement de page, le serveur considérera l'utilisateur comme un nouveau visiteur anonyme.
+        session.invalidate(); 
+        
+        // Redirection vers la page de login
         return "redirect:/login";
     }
 }
