@@ -1,16 +1,16 @@
 package fr.cytech.pau.hia_jee.service;
 
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import fr.cytech.pau.hia_jee.model.Role;
 import fr.cytech.pau.hia_jee.model.Team;
 import fr.cytech.pau.hia_jee.model.User;
 import fr.cytech.pau.hia_jee.repository.TeamRepository;
 import fr.cytech.pau.hia_jee.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -142,5 +142,50 @@ public class UserService {
 
         user.setTeam(team);
         userRepository.save(user);
+    }
+
+
+    public User updateUsername(Long userId, String newUsername) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        // On vérifie si le pseudo a changé et s'il est déjà pris
+        if (!user.getUsername().equals(newUsername) && userRepository.existsByUsername(newUsername)) {
+            throw new RuntimeException("Ce pseudo est déjà pris !");
+        }
+
+        user.setUsername(newUsername);
+        return userRepository.save(user);
+    }
+
+    /**
+     * Met à jour le mot de passe.
+     */
+    public void updatePassword(Long userId, String currentPwd, String newPwd, String confirmPwd) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        // 1. Vérifier l'ancien mot de passe (Même logique que ta méthode authenticate)
+        if (!user.getPassword().equals(currentPwd)) {
+            throw new RuntimeException("L'ancien mot de passe est incorrect.");
+        }
+
+        // 2. Vérifier que les deux nouveaux mots de passe correspondent
+        if (!newPwd.equals(confirmPwd)) {
+            throw new RuntimeException("La confirmation du mot de passe ne correspond pas.");
+        }
+
+        // 3. Sauvegarder (En clair selon ta logique actuelle)
+        user.setPassword(newPwd);
+        userRepository.save(user);
+    }
+
+    /**
+     * Supprime définitivement le compte.
+     */
+    public void deleteAccount(Long userId) {
+        if (userRepository.existsById(userId)) {
+            userRepository.deleteById(userId);
+        }
     }
 }

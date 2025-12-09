@@ -54,7 +54,7 @@
                     <i class="bi bi-trophy text-warning"></i> Tournois</a></li>
                 <li class="nav-item"><a class="nav-link" th:href="@{/ladder}">Classement</a></li>
                 <li class="nav-item" th:unless="${session.user != null}">
-                    <a class="nav-link text-info" th:href="@{/recruitment}"><i class="bi bi-search"></i> Mercato</a></li>
+                    <a class="nav-link text-info" th:href="@{/teams}"><i class="bi bi-search"></i> Mercato</a></li>
                 <li class="nav-item" th:if="${session.user != null}">
                     <a class="nav-link" th:href="@{/planning}"><i class="bi bi-calendar-event"></i> Agenda</a></li>
 
@@ -90,7 +90,7 @@
                         <span class="text-uppercase fw-bold small" th:text="${session.user.username}">USER</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow-lg rounded-0 border-danger border-top">
-                        <li><a class="dropdown-item" th:href="@{/profile}"><i class="bi bi-gear"></i> Paramètres</a></li>
+                        <li><a class="dropdown-item" th:href="@{/setting}"><i class="bi bi-gear"></i> Paramètres</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" 
                             th:href="@{/logout}"><i class="bi bi-power"></i> Déconnexion</a></li>
