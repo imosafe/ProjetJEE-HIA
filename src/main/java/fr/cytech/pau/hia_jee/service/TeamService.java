@@ -1,16 +1,17 @@
 package fr.cytech.pau.hia_jee.service;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import fr.cytech.pau.hia_jee.model.Team;
 import fr.cytech.pau.hia_jee.model.Tournament;
 import fr.cytech.pau.hia_jee.model.User;
 import fr.cytech.pau.hia_jee.repository.TeamRepository;
 import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import fr.cytech.pau.hia_jee.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class TeamService {

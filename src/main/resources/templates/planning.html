@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{fragments/layout :: layout(title='Agenda des Tournois', content=~{::content})}">
+<body>
+
+<div th:fragment="content">
+    <div class="container py-4">
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <h2 class="fw-bold text-uppercase m-0">
+                    <i class="bi bi-calendar-week text-danger"></i> Agenda <span class="text-danger">E-Sport</span>
+                </h2>
+                <p class="text-muted small m-0">SUIVRE LES MATCHS</p>
+            </div>
+
+            <div class="input-group shadow-sm" style="max-width: 300px;">
+                <span class="input-group-text bg-dark border-dark text-white"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control border-secondary" 
+                       placeholder="Rechercher un tournoi..." disabled 
+                       title="La recherche sera disponible prochainement"
+                       style="background-color: #e9ecef;">
+            </div>
+        </div>
+
+        <div class="card shadow border-0 rounded-3 overflow-hidden">
+            
+            <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                <a th:href="@{/planning(month=${prevMonth}, year=${prevYear})}" class="btn btn-outline-light btn-sm rounded-circle">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+
+                <h4 class="fw-bold text-uppercase m-0 letter-spacing-1">
+                    <span th:text="${currentMonth}">DECEMBER</span> <span th:text="${currentYear}">2025</span>
+                </h4>
+
+                <a th:href="@{/planning(month=${nextMonth}, year=${nextYear})}" class="btn btn-outline-light btn-sm rounded-circle">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0 text-center" style="table-layout: fixed;">
+                        <thead class="bg-light text-secondary small text-uppercase fw-bold">
+                            <tr>
+                                <th class="py-3">Lun</th>
+                                <th class="py-3">Mar</th>
+                                <th class="py-3">Mer</th>
+                                <th class="py-3">Jeu</th>
+                                <th class="py-3">Ven</th>
+                                <th class="py-3">Sam</th>
+                                <th class="py-3">Dim</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="week : ${calendarWeeks}">
+                                <td th:each="day : ${week}" 
+                                    class="calendar-cell"
+                                    th:classappend="${!day.isCurrentMonth ? 'bg-light opacity-50' : ''}">
+                                    
+                                    <div class="position-relative w-100 h-100">
+                                        <span class="day-number fw-bold" 
+                                              th:classappend="${day.isToday ? 'text-white bg-danger rounded-circle d-inline-block px-2' : ''}"
+                                              th:text="${day.day}">1</span>
+
+                                        <div th:each="event : ${day.events}" 
+                                             class="event-badge text-white mt-1"
+                                             th:classappend="'bg-' + ${event.color}">
+                                            <i th:class="'bi ' + ${event.icon} + ' small-icon'"></i>
+                                            <span th:text="${event.title}">Tournoi</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <style>
+        .calendar-cell {
+            height: 120px; 
+            vertical-align: top;
+            width: 14.28%;
+        }
+        .event-badge {
+            font-size: 0.75rem;
+            padding: 4px 6px;
+            border-radius: 4px;
+            text-align: left;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .event-badge:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        .small-icon { margin-right: 4px; }
+    </style>
+</div>
+
+</body>
+</html>

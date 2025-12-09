@@ -4,14 +4,41 @@
 <body>
 
 <div th:fragment="content">
+
+    <style>
+        /* Transition douce pour tous les éléments qui vont changer */
+        .team-card, .team-card h4, .team-card .top-bar-indicator {
+            transition: all 0.3s ease;
+        }
+
+        /* 1. La carte elle-même au survol (Bordure et Ombre Verte) */
+        .team-card:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6) !important; /* Glow Vert */
+            transform: translateY(-5px) scale(1.02); /* Petit zoom */
+        }
+
+        /* 2. Le Nom de l'équipe au survol (Devient Vert) */
+        /* On cible le h4 qui est à l'intérieur de la carte survolée */
+        .team-card:hover h4.card-title {
+            color: #00ff88 !important;
+        }
+
+        /* 3. La barre du haut au survol (Devient Bleu Info) */
+        /* On cible la div en position absolue en haut */
+        .team-card .position-absolute.top-0 {
+            /* On force la couleur "info" (cyan) de Bootstrap */
+            background-color: #0dcaf0 !important; 
+        }
+    </style>
+
     <div class="container">
 
         <div class="d-flex justify-content-between align-items-center mb-5 border-bottom border-danger pb-3">
             <div>
-                <h1 class="text-uppercase fw-bold text-white mb-0">
-                    <i class="bi bi-trophy-fill text-danger"></i> Classement & Équipes
+                <h1 class="text-uppercase fw-bold text-dark mb-0">
+                    <i class="bi bi-trophy-fill text-danger"></i> Classement <span class="text-danger">& Équipes</span>
                 </h1>
-                <p class="text-white-50 mb-0">Rejoignez une équipe et commencez la compétition.</p>
+                <p class="text-dark mb-0">Rejoignez une équipe et commencez la compétition.</p>
             </div>
 
             <div th:if="${session.user != null and session.user.team == null}">
@@ -39,8 +66,8 @@
         <div class="row g-4">
             <div class="col-md-6 col-lg-4" th:each="team : ${teams}">
 
-                <div class="card bg-dark text-white border border-secondary shadow h-100 hover-effect position-relative overflow-hidden">
-
+                <div class="card bg-dark text-white border border-secondary shadow h-100 team-card position-relative overflow-hidden">
+    
                     <div class="position-absolute top-0 start-0 w-100" style="height: 4px;"
                          th:classappend="${team.game == 'League of Legends' ? 'bg-primary' : (team.game == 'Valorant' ? 'bg-danger' : 'bg-warning')}"></div>
 

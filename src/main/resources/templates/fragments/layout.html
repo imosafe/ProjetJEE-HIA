@@ -53,10 +53,10 @@
                 <li class="nav-item"><a class="nav-link" th:href="@{/tournaments}">
                     <i class="bi bi-trophy text-warning"></i> Tournois</a></li>
                 <li class="nav-item"><a class="nav-link" th:href="@{/ladder}">Classement</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/planning}"><i class="bi bi-calendar-event"></i> Agenda</a></li>
                 <li class="nav-item" th:unless="${session.user != null}">
                     <a class="nav-link text-info" th:href="@{/teams}"><i class="bi bi-search"></i> Mercato</a></li>
-                <li class="nav-item" th:if="${session.user != null}">
-                    <a class="nav-link" th:href="@{/planning}"><i class="bi bi-calendar-event"></i> Agenda</a></li>
 
                 <li class="nav-item" th:if="${session.user != null and session.user.team != null}">
                     <a class="nav-link text-warning fw-bold" th:href="@{/teams/my}"><i class="bi bi-shield-fill"></i> Mon Équipe</a>
@@ -127,7 +127,7 @@
                 <h5 class="text-danger fw-bold text-uppercase mt-4 ">Compétition</h5>
                 <ul class="list-unstyled ">
                     <li class="mb-2"><a href="/tournaments" class="footer-link">Tous les Tournois</a></li>
-                    <li class="mb-2"><a href="#" class="footer-link">Classement d'equipes</a></li>
+                    <li class="mb-2"><a href="/ladder" class="footer-link">Classement d'equipes</a></li>
                     <li><a href="/teams" class="footer-link">Toutes les équipes</a></li>
                 </ul>
             </div>
