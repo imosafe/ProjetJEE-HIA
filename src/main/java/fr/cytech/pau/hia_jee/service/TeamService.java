@@ -80,22 +80,28 @@ public class TeamService {
      * Si ça plante au milieu, tout doit être annulé (Rollback).
      */
     @Transactional
-    public void dissolveTeam(Long teamId) {
-        Team team = findById(teamId);
-        
-        // 1. Libérer les membres
-        // On parcourt tous les membres pour mettre leur champ 'team' à null.
-        // Si on ne fait pas ça, selon le CascadeType, on risquerait de SUPPRIMER les utilisateurs 
-        // avec l'équipe, ce qu'on ne veut absolument pas !
+    public void dissolveTeam(Long id) {
+        Team team = teamRepository.findById(id).orElseThrow();
+
+        // 1. Nettoyage de la relation Many-to-Many (Tournois)
+        // On retire l'équipe des tournois pour éviter l'erreur de clé étrangère
+        if (team.getTournaments() != null) {
+            for (Tournament t : team.getTournaments()) {
+                t.getTeams().remove(team);
+            }
+        }
+
+        // 2. Nettoyage de la relation One-to-Many (Membres)
+        // On libère les membres (setTeam(null)) pour ne pas les supprimer avec l'équipe
+        // (Alternative sûre au CascadeType.REMOVE qui supprimerait les users)
         if (team.getMembers() != null) {
             for (User member : team.getMembers()) {
                 member.setTeam(null);
-                // Pas besoin de userRepository.save(member) explicite car on est dans une transaction,
-                // Hibernate détecte les changements (Dirty Checking) et fera les UPDATE tout seul.
+                // Pas besoin de save(member) explicite grâce au Dirty Checking transactionnel
             }
         }
-        
-        // 2. Supprimer l'équipe
+
+        // 3. Suppression propre de l'équipe
         teamRepository.delete(team);
     }
 
