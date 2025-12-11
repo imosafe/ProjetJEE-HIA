@@ -8,10 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import fr.cytech.pau.hia_jee.model.Match;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import fr.cytech.pau.hia_jee.model.Tournament;
-import fr.cytech.pau.hia_jee.repository.MatchRepository;
 import fr.cytech.pau.hia_jee.repository.TournamentRepository;
 import fr.cytech.pau.hia_jee.service.SponsorService;
 import fr.cytech.pau.hia_jee.service.TournamentService;
@@ -24,17 +22,17 @@ import fr.cytech.pau.hia_jee.service.TournamentService;
 public class TournamentController {
 
     private final TournamentRepository tRepo;
-    private final MatchRepository mRepo;
     private final TournamentService tService;
     private final SponsorService sponsorService;
+    private final TournamentService tournamentService;
 
     // Injection par constructeur : meilleure pratique que @Autowired sur les champs
     // Cela rend le contrôleur plus facile à tester unitairement.
-    public TournamentController(TournamentRepository tRepo, MatchRepository mRepo, TournamentService tService, SponsorService sponsorService) {
+    public TournamentController(TournamentService tournamentService, TournamentRepository tRepo, TournamentService tService, SponsorService sponsorService) {
         this.tRepo = tRepo;
-        this.mRepo = mRepo;
         this.tService = tService;
         this.sponsorService = sponsorService;
+        this.tournamentService=tournamentService;
     }
 
     // ============================================================
@@ -116,24 +114,28 @@ public class TournamentController {
     // 5. GESTION DES SCORES
     // ============================================================
 
-    /**
-     * Permet à l'admin de saisir le score d'un match.
-     */
-    @PostMapping("/match/{matchId}/score")
-    public String enterScore(@PathVariable Long matchId,
+   @PostMapping("/matches/score")
+    public String enterScore(@RequestParam Long matchId, 
                              @RequestParam int scoreA, 
-                             @RequestParam int scoreB) {
-        
-        // 1. Mise à jour du score et calcul du vainqueur via le service
-        // (Le service va aussi créer le match du tour suivant si besoin)
-        tService.enterScore(matchId, scoreA, scoreB);
-        
-        // 2. Récupération du match pour retrouver l'ID du tournoi parent
-        // C'est nécessaire pour savoir où rediriger l'utilisateur.
-        Match match = mRepo.findById(matchId).orElseThrow();
-        Long tournamentId = match.getTournament().getId();
-        
-        // 3. Retour à la vue de l'arbre pour voir l'avancement
-        return "redirect:/tournaments/tree/" + tournamentId; 
+                             @RequestParam int scoreB, 
+                             RedirectAttributes redirectAttributes) {
+
+        // 1. Récupérer l'ID du tournoi pour la redirection
+        Long tournamentId = tournamentService.findTournamentIdByMatchId(matchId);
+
+        try {
+            // 2. Appel au service (qui contient la logique métier)
+            tournamentService.enterScore(matchId, scoreA, scoreB);
+            
+            // Succès
+            redirectAttributes.addFlashAttribute("successMessage", "Score enregistré et tableau mis à jour !");
+
+        } catch (RuntimeException e) {
+            // 3. Gestion de l'erreur (ex: Match nul)
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        // 4. Retour à la page de l'arbre
+        return "redirect:/tournaments/tree/" + tournamentId;
     }
 }

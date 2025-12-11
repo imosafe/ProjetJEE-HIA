@@ -1,6 +1,6 @@
 package fr.cytech.pau.hia_jee.controller;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -67,57 +67,35 @@ public class PublicTournamentController {
         Tournament tournament = tournamentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tournoi introuvable"));
         
-        // 2. Récupérer tous les matchs associés au tournoi
-        List<Match> allMatches = tournament.getMatches();
+        // 2. Récupérer tous les matchs
+        // IMPORTANT : On copie dans une ArrayList pour éviter les problèmes Hibernate (LazyInitialization / PersistentBag)
+        List<Match> allMatches = new ArrayList<>(tournament.getMatches());
 
-        // Map pour stocker les matchs par round :
-        // Clé = Numéro du round (1, 2, 3...)
-        // Valeur = Liste des matchs de ce round
-        // LinkedHashMap est utilisé pour garantir l'ordre d'insertion (Round 1, puis 2, puis 3...)
-        Map<Integer, List<Match>> matchesByRound = new LinkedHashMap<>();
+        // 3. Organiser les matchs par Round
+        // On utilise un TreeMap pour que les rounds soient triés automatiquement (1, 2, 3...)
+        Map<Integer, List<Match>> matchesByRound = new java.util.TreeMap<>();
 
         if(allMatches != null && !allMatches.isEmpty()){
             
-            // 3. Tri des matchs par ID croissant.
-            // HYPOTHÈSE : Les matchs ont été créés dans l'ordre chronologique en base de données.
-            // ID petits = 1er tour, ID moyens = 2e tour, ID grand = Finale.
-            allMatches.sort((m1, m2) -> m1.getId().compareTo(m2.getId()));
-
-            // 4. Algorithme de découpage par puissance de 2
-            // Dans un tournoi à élimination directe complet, le nombre de matchs total est N-1 (où N est le nb d'équipes).
-            // Le 1er tour contient environ la moitié des matchs totaux + 1.
-            int matchesInCurrentRound = (allMatches.size() + 1) / 2;
+            // On parcourt simplement la liste des matchs existants
+            for (Match match : allMatches) {
+                // On récupère le numéro du round (stocké lors de la génération)
+                Integer r = match.getRound();
+                
+                // Si la liste pour ce round n'existe pas encore, on la crée
+                matchesByRound.putIfAbsent(r, new ArrayList<>());
+                
+                // On ajoute le match à la liste de son round
+                matchesByRound.get(r).add(match);
+            }
             
-            int index = 0;          // Curseur pour parcourir la liste principale
-            int roundNumber = 1;    // Compteur de rounds
-
-            // On boucle tant qu'on n'a pas traité tous les matchs de la liste
-            while(index < allMatches.size()){
-                
-                // Calcul de l'index de fin pour le round actuel
-                // Math.min évite de dépasser la taille de la liste (IndexOutOfBoundsException)
-                int endIndex = Math.min(index + matchesInCurrentRound, allMatches.size());
-                
-                // Extraction de la sous-liste correspondant au Round actuel
-                List<Match> roundMatches = allMatches.subList(index, endIndex);
-                
-                // Stockage dans la Map
-                matchesByRound.put(roundNumber, roundMatches);
-
-                // --- Préparation pour le tour suivant ---
-                
-                // On avance le curseur à la fin du round qu'on vient de traiter
-                index = endIndex;
-                
-                // Le nombre de matchs est divisé par 2 à chaque tour suivant (8e -> quarts -> demies -> finale)
-                matchesInCurrentRound = matchesInCurrentRound / 2;
-                
-                // On passe au round suivant
-                roundNumber++;
+            // Optionnel : Trier les matchs à l'intérieur de chaque round par ID (pour l'affichage)
+            for (List<Match> roundMatches : matchesByRound.values()) {
+                roundMatches.sort((m1, m2) -> m1.getId().compareTo(m2.getId()));
             }
         }
 
-        // 5. Envoi des données à la vue
+        // 4. Envoi des données à la vue
         model.addAttribute("tournament", tournament);
         model.addAttribute("matchesByRound", matchesByRound);
 

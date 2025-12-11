@@ -3,7 +3,7 @@
       th:replace="~{fragments/layout :: layout('Arbre du Tournoi', ~{::section})}">
       
 <head>
-    </head>
+</head>
 
 <body>
 
@@ -50,34 +50,45 @@
         </div>
 
         <div th:if="${session.user != null && session.user.role.name() == 'ADMIN' 
-              && (tournament.matches == null || tournament.matches.isEmpty()) 
-              && (tournament.teams == null || tournament.teams.size() < 2)}" 
-     class="alert alert-danger text-center shadow-sm">
-    <h4 class="alert-heading"><i class="bi bi-exclamation-octagon-fill"></i> Pas assez de participants</h4>
-    <p class="mb-0">
-        Il faut au moins <strong>2 équipes</strong> pour générer un arbre. 
-        <br>
-        Actuellement : <span class="badge bg-white text-danger fs-6" th:text="${tournament.teams != null ? tournament.teams.size() : 0}">0</span> équipe(s) inscrite(s).
-    </p>
-</div>
+                      && (tournament.matches == null || tournament.matches.isEmpty()) 
+                      && (tournament.teams == null || tournament.teams.size() < 2)}" 
+             class="alert alert-danger text-center shadow-sm">
+            <h4 class="alert-heading"><i class="bi bi-exclamation-octagon-fill"></i> Pas assez de participants</h4>
+            <p class="mb-0">
+                Il faut au moins <strong>2 équipes</strong> pour générer un arbre. 
+                <br>
+                Actuellement : <span class="badge bg-white text-danger fs-6" th:text="${tournament.teams != null ? tournament.teams.size() : 0}">0</span> équipe(s) inscrite(s).
+            </p>
+        </div>
 
-<div th:if="${session.user != null && session.user.role.name() == 'ADMIN' 
-              && (tournament.matches == null || tournament.matches.isEmpty()) 
-              && (tournament.teams != null && tournament.teams.size() >= 2)}" 
-     class="alert alert-warning text-center">
-    
-    <p class="mb-2">
-        <i class="bi bi-info-circle-fill"></i> 
-        L'arbre n'a pas encore été généré, mais 
-        <strong><span th:text="${tournament.teams.size()}">X</span> équipes</strong> sont prêtes.
-    </p>
-    
-    <form th:action="@{/admin/tournaments/{id}/generate(id=${tournament.id})}" method="post">
-        <button class="btn btn-danger fw-bold shadow px-4">
-            <i class="bi bi-lightning-fill"></i> GÉNÉRER L'ARBRE MAINTENANT
-        </button>
-    </form>
-</div>
+        <div class="container mt-3">
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Oups !</strong> <span th:text="${errorMessage}">Message d'erreur par défaut</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> <strong>Succès !</strong> <span th:text="${successMessage}">Action réussie</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+        <div th:if="${session.user != null && session.user.role.name() == 'ADMIN' 
+                      && (tournament.matches == null || tournament.matches.isEmpty()) 
+                      && (tournament.teams != null && tournament.teams.size() >= 2)}" 
+             class="alert alert-warning text-center">
+            
+            <p class="mb-2">
+                <i class="bi bi-info-circle-fill"></i> 
+                L'arbre n'a pas encore été généré, mais 
+                <strong><span th:text="${tournament.teams.size()}">X</span> équipes</strong> sont prêtes.
+            </p>
+            
+            <form th:action="@{/admin/tournaments/{id}/generate(id=${tournament.id})}" method="post">
+                <button class="btn btn-danger fw-bold shadow px-4">
+                    <i class="bi bi-lightning-fill"></i> GÉNÉRER L'ARBRE MAINTENANT
+                </button>
+            </form>
+        </div>
 
         <hr class="border-secondary">
 
@@ -108,14 +119,17 @@
                     <div th:if="${session.user != null && session.user.role.name() == 'ADMIN' && match.winner == null && match.teamA != null && match.teamB != null}" 
                          class="mt-3 pt-2 border-top border-secondary">
                         
-                        <form th:action="@{/admin/tournaments/match/{matchId}/score(matchId=${match.id})}" method="post" class="d-flex gap-2 justify-content-center">
+                        <form th:action="@{/admin/tournaments/matches/score}" method="post" class="d-flex gap-2 justify-content-center">
+                            
+                            <input type="hidden" name="matchId" th:value="${match.id}">
+
                             <input type="number" name="scoreA" class="form-control form-control-sm bg-dark text-white border-secondary text-center" placeholder="A" required style="width: 50px;">
                             <span class="text-white align-self-center">:</span>
                             <input type="number" name="scoreB" class="form-control form-control-sm bg-dark text-white border-secondary text-center" placeholder="B" required style="width: 50px;">
+                            
                             <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check"></i></button>
                         </form>
                     </div>
-                    
                     <div th:if="${match.teamB == null}" class="mt-2 text-center">
                         <span class="badge bg-success" style="font-size: 0.7rem;">Qualifié d'office ✅</span>
                     </div>
