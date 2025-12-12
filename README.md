@@ -102,7 +102,7 @@ L'application dépasse le simple CRUD pour proposer une véritable logique méti
 * **Association Graphique:**
     L'interface permet d'associer et dissocier dynamiquement les entités (ex: Ajout de sponsors à un tournoi via une interface dédiée).
 
-### 2. Respect des Exigences Techniques (5/5) [cite: 25]
+### 2. Respect des Exigences Techniques (5/5) 
 * **Architecture MVC :** Séparation stricte entre Entités, Contrôleurs et Vues Thymeleaf.
 * **Verbes HTTP :** Utilisation correcte de `GET` (affichage), `POST` (traitement) et des redirections (`Post-Redirect-Get`).
 ***Interface :** Utilisation de **Bootstrap** pour un rendu esthétique et responsive.
@@ -119,4 +119,4 @@ L'application dépasse le simple CRUD pour proposer une véritable logique méti
 * **Hichem Chergui**
 * **Angel Fernandez Argoul**
 
-*Projet réalisé pour le module JEE - CY Tech 2024*
+*Projet réalisé dans le cadre du module JEE - CY Tech 2024/2025*
